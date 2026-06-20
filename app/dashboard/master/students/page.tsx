@@ -225,32 +225,45 @@ export default function StudentsPage() {
     setSubmitting(true)
 
     try {
+      const profileId = crypto.randomUUID()
       // 1. Create Profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert([{
+          id: profileId,
           first_name: formData.first_name,
           last_name: formData.last_name,
-          email: formData.campus_email || formData.personal_email
+          email: formData.campus_email || formData.personal_email,
+          phone: formData.phone_number,
+          gender: formData.gender === 'Laki-laki' ? 'laki-laki' : (formData.gender === 'Perempuan' ? 'perempuan' : ''),
+          place_of_birth: formData.birth_place,
+          date_of_birth: formData.birth_date || null,
+          address_ktp: formData.street_address,
         }])
         .select()
         .single()
 
-      if (profileError) throw profileError
+      if (profileError) {
+        console.error('Error inserting profile (Possible FK constraint with auth.users):', profileError)
+        return
+      }
 
       // 2. Create Student
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .insert([{
+          profile_id: profileId,
           nim: formData.nim,
           program_id: formData.study_program_id,
-          profile_id: profileData.id,
-          // Extend with other fields if they exist in your 'students' table
+          enrollment_year: parseInt(formData.admission_year) || new Date().getFullYear(),
         }])
         .select()
         .single()
 
-      if (studentError) throw studentError
+      if (studentError) {
+        console.error('Error inserting student:', studentError)
+        return
+      }
 
       // 3. Create other records (student_academics, student_parents, etc.)
       // Note: Make sure these tables exist in your database first!

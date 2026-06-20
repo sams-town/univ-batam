@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { indonesianProvinces, getCitiesByProvince, getDistrictsByCity, getVillagesByDistrict } from '@/lib/indonesian-regions'
 import { validateAttendanceLocation } from '@/lib/geolocation'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -392,11 +393,53 @@ export default function LecturersPage() {
     setFormData({ ...formData, additionalDocs: updated })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: integrate with backend API
-    console.log('Form submitted:', formData)
-    setIsModalOpen(false)
+    try {
+      // Create a UUID for profile since we don't have auth hook here (may fail FK constraint if not bypassed)
+      const profileId = crypto.randomUUID()
+      
+      // Separate first and last name
+      const nameParts = formData.nama.split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      // 1. Insert into profiles
+      const { error: profileError } = await supabase.from('profiles').insert([{
+        id: profileId,
+        first_name: firstName,
+        last_name: lastName,
+        email: formData.email,
+        phone: formData.hp,
+        gender: formData.jenisKelamin === 'Laki-laki' ? 'laki-laki' : (formData.jenisKelamin === 'Perempuan' ? 'perempuan' : ''),
+        place_of_birth: formData.lokasi,
+        date_of_birth: formData.tglLahir || null,
+        address_ktp: formData.alamat,
+        address_domicile: formData.alamatDomisili,
+      }])
+
+      if (profileError) {
+        console.error('Error inserting profile:', profileError)
+        return
+      }
+
+      // 2. Insert into lecturers
+      const { error: lecturerError } = await supabase.from('lecturers').insert([{
+        profile_id: profileId,
+        nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
+      }])
+
+      if (lecturerError) {
+        console.error('Error inserting lecturer:', lecturerError)
+        return
+      }
+
+      console.log('Successfully saved lecturer:', formData)
+      setIsModalOpen(false)
+      // TODO: refresh data list if necessary
+    } catch (error) {
+      console.error('Unexpected error during submit:', error)
+    }
   }
 
   return (

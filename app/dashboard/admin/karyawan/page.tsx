@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { indonesianProvinces, getCitiesByProvince, getDistrictsByCity, getVillagesByDistrict } from '@/lib/indonesian-regions'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -214,6 +215,49 @@ export default function KaryawanManagementPage() {
     const newDocs = [...(formData.additionalDocs || [])]
     newDocs.splice(index, 1)
     setFormData({ ...formData, additionalDocs: newDocs })
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const profileId = crypto.randomUUID()
+      const nameParts = formData.nama.split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      const { error: profileError } = await supabase.from('profiles').insert([{
+        id: profileId,
+        first_name: firstName,
+        last_name: lastName,
+        email: formData.email,
+        phone: formData.hp,
+        gender: formData.jenisKelamin === 'Laki-laki' ? 'laki-laki' : (formData.jenisKelamin === 'Perempuan' ? 'perempuan' : ''),
+        place_of_birth: formData.lokasi,
+        date_of_birth: formData.tglLahir || null,
+        address_ktp: formData.alamat,
+        address_domicile: formData.alamatDomisili,
+      }])
+
+      if (profileError) {
+        console.error('Error inserting profile:', profileError)
+        return
+      }
+
+      const { error: employeeError } = await supabase.from('employees').insert([{
+        profile_id: profileId,
+        nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
+        status: formData.status || 'Tetap'
+      }])
+
+      if (employeeError) {
+        console.error('Error inserting employee:', employeeError)
+        return
+      }
+
+      console.log('Successfully saved employee:', formData)
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Unexpected error during submit:', error)
+    }
   }
 
   // Face Recognition Modal Functions
@@ -583,7 +627,7 @@ export default function KaryawanManagementPage() {
                   <X className="h-4 w-4 mr-2" />
                   Batal
                 </Button>
-                <Button className="bg-gradient-to-r from-indigo-600 to-blue-600">
+                <Button className="bg-gradient-to-r from-indigo-600 to-blue-600" onClick={handleSubmit}>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Simpan
                 </Button>
