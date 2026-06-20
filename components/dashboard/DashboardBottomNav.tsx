@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, Clock, User, Fingerprint, Briefcase, BookOpen, LogOut } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 type Role = 'mahasiswa' | 'dosen' | 'employee' | 'karyawan'
 
@@ -16,28 +17,28 @@ const navConfig: Record<string, { icon: typeof Home; label: string; href: string
     { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
     // FAB center placeholder
     { icon: User, label: 'Profil', href: '/dashboard/profile' },
-    { icon: LogOut, label: 'Log out', href: '/auth/login' },
+    { icon: LogOut, label: 'Log out', href: '/login' },
   ],
   mahasiswa: [
     { icon: Home, label: 'Home', href: '/dashboard/student' },
     { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
     // FAB center placeholder
     { icon: User, label: 'Profil', href: '/dashboard/profile' },
-    { icon: LogOut, label: 'Log out', href: '/auth/login' },
+    { icon: LogOut, label: 'Log out', href: '/login' },
   ],
   employee: [
     { icon: Home, label: 'Home', href: '/dashboard/employee' },
     { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
     // FAB center placeholder
     { icon: User, label: 'Profil', href: '/dashboard/profile' },
-    { icon: LogOut, label: 'Log out', href: '/auth/login' },
+    { icon: LogOut, label: 'Log out', href: '/login' },
   ],
   karyawan: [
     { icon: Home, label: 'Home', href: '/dashboard/employee' },
     { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
     // FAB center placeholder
     { icon: User, label: 'Profil', href: '/dashboard/profile' },
-    { icon: LogOut, label: 'Log out', href: '/auth/login' },
+    { icon: LogOut, label: 'Log out', href: '/login' },
   ],
 }
 
@@ -50,11 +51,12 @@ export default function DashboardBottomNav({ role, onFabClick }: DashboardBottom
   const leftItems = items.slice(0, 2)
   const rightItems = items.slice(2, 4)
 
-  const handleNav = (href: string) => {
-    if (href === '/auth/login') {
+  const handleNav = async (href: string) => {
+    if (href === '/login') {
       const userRole = localStorage.getItem('user_role') || 'default'
       localStorage.removeItem(`lastAttendancePhoto_${userRole}`)
       localStorage.removeItem('user_role')
+      await supabase.auth.signOut()
     }
     router.push(href)
   }

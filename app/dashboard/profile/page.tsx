@@ -235,6 +235,9 @@ export default function ProfilePage() {
   }
 
   const handleLogout = async () => {
+    const userRole = localStorage.getItem('user_role') || 'default'
+    localStorage.removeItem(`lastAttendancePhoto_${userRole}`)
+    localStorage.removeItem('user_role')
     await supabase.auth.signOut()
     window.location.href = '/login'
   }
