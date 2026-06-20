@@ -20,7 +20,8 @@ export default function EmployeeLayout({
   const isEmployee =
     localStorageRole === "employee" ||
     localStorageRole === "karyawan" ||
-    (profile?.role?.name && profile.role.name === "karyawan");
+    localStorageRole === "pegawai" ||
+    (profile?.role?.name && (profile.role.name === "karyawan" || profile.role.name === "pegawai"));
 
   const isVerified = !loading && isEmployee;
 
