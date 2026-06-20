@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Fingerprint, Camera, X, CheckCircle2, RotateCcw } from 'lucide-react'
-import DashboardTopCards from '@/components/dashboard/DashboardTopCards'
+import { Fingerprint, Camera, X, CheckCircle2, RotateCcw, Bell, Upload, Clock, DollarSign, Wallet, WalletCards, Calendar, Send, Zap, Lock, Grid, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import DashboardQuickLinks from '@/components/dashboard/DashboardQuickLinks'
 import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav'
 import AttendanceSuccessModal from '@/components/dashboard/AttendanceSuccessModal'
 import { validateAttendanceLocation } from '@/lib/geolocation'
 
 export default function EmployeeDashboardPage() {
+  const { profile } = useAuth()
   const [isFaceModalOpen, setIsFaceModalOpen] = useState(false)
   const [faceCameraActive, setFaceCameraActive] = useState(false)
   const [faceCameraLoading, setFaceCameraLoading] = useState(false)
@@ -158,31 +161,166 @@ export default function EmployeeDashboardPage() {
     }
   }, [isFaceModalOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return (
-    <div className="bg-slate-50 min-h-screen pb-24">
-      {/* Header Background is part of Top Cards for Employee */}
-      <DashboardTopCards role="employee" />
+  const name = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Pegawai'
+  const initials = `${profile?.first_name?.charAt(0) || ''}${profile?.last_name?.charAt(0) || ''}` || 'PG'
 
-      {/* Main Content */}
-      <div className="px-4">
-        {/* Quick Attendance Button */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
-          <div className="flex items-center justify-between">
+  const [time, setTime] = useState('00:00:00')
+  const [dateStr, setDateStr] = useState('')
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date()
+      setTime(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'))
+      setDateStr(now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase())
+    }
+    updateTime()
+    const int = setInterval(updateTime, 1000)
+    return () => clearInterval(int)
+  }, [])
+
+  return (
+    <div className="bg-slate-50 min-h-screen pb-24 font-sans">
+      {/* Purple Header & Top Card */}
+      <div className="bg-gradient-to-b from-[#6b34ff] to-[#804dfa] rounded-b-[40px] px-6 pt-12 pb-24 relative text-white">
+        {/* Top Info */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 border-2 border-white/20">
+              <AvatarImage src={profile?.avatar_url || ''} />
+              <AvatarFallback className="bg-indigo-900 text-white font-bold">{initials}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm font-semibold text-slate-500">MULAI HARI INI</p>
-              <p className="text-xl font-bold text-slate-900">Rekam Kehadiran</p>
+              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Selamat Malam</p>
+              <p className="text-sm font-extrabold">{name}</p>
             </div>
-            <button
-              onClick={handleFabClick}
-              className="w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-            >
-              <Fingerprint className="h-8 w-8 text-white" />
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center bg-white/10">
+              <Upload className="h-4 w-4 text-white" />
+            </button>
+            <button className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center bg-white/10 relative">
+              <Bell className="h-4 w-4 text-white" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[#804dfa]"></span>
             </button>
           </div>
         </div>
 
-        {/* Quick Links */}
-        <DashboardQuickLinks role="employee" />
+        {/* Time */}
+        <div className="text-center mb-4">
+          <p className="text-5xl font-extrabold tracking-widest drop-shadow-sm">{time}</p>
+          <p className="text-[10px] font-bold opacity-80 mt-2 tracking-widest uppercase">{dateStr}</p>
+        </div>
+
+        {/* Floating White Card */}
+        <div className="absolute left-6 right-6 -bottom-16 bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 text-slate-800">
+          <div className="grid grid-cols-3 gap-2 border-b border-slate-100 pb-4 mb-4">
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-2">
+                <Clock className="h-4 w-4 text-indigo-500" />
+              </div>
+              <p className="text-[9px] font-extrabold text-slate-400 mb-1">JAM KERJA</p>
+              <p className="text-xs font-bold text-slate-700">00:00 - 00:00</p>
+              <p className="text-[9px] font-bold text-slate-400 mt-0.5">Off</p>
+            </div>
+            <div className="text-center border-l border-r border-slate-100">
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-2">
+                <Fingerprint className="h-4 w-4 text-slate-400" />
+              </div>
+              <p className="text-[9px] font-extrabold text-slate-400 mb-1">JAM MASUK</p>
+              <p className="text-xs font-bold text-slate-400">Belum</p>
+            </div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-2">
+                <RotateCcw className="h-4 w-4 text-slate-400" />
+              </div>
+              <p className="text-[9px] font-extrabold text-slate-400 mb-1">JAM PULANG</p>
+              <p className="text-xs font-bold text-slate-400">Belum</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center py-3 px-1 rounded-2xl border border-slate-100 bg-slate-50/50">
+              <DollarSign className="h-5 w-5 text-indigo-300 mx-auto mb-2" />
+              <p className="text-[9px] font-extrabold text-slate-400 uppercase">Payroll</p>
+            </div>
+            <div className="text-center py-3 px-1 rounded-2xl border border-slate-100 bg-slate-50/50">
+              <Wallet className="h-5 w-5 text-emerald-400 mx-auto mb-2" />
+              <p className="text-[9px] font-extrabold text-slate-400 uppercase mb-1">Reimburse</p>
+              <p className="text-xs font-bold text-slate-700">Rp 0</p>
+            </div>
+            <div className="text-center py-3 px-1 rounded-2xl border border-slate-100 bg-slate-50/50">
+              <WalletCards className="h-5 w-5 text-amber-500 mx-auto mb-2" />
+              <p className="text-[9px] font-extrabold text-slate-400 uppercase mb-1">Kasbon</p>
+              <p className="text-xs font-bold text-slate-700">Rp 0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 mt-24">
+        {/* Quick Attendance Button */}
+        <div className="bg-gradient-to-r from-[#7139ff] to-[#9b6cff] rounded-[24px] p-5 shadow-xl shadow-purple-500/20 mb-8 flex items-center justify-between">
+          <div className="text-white pl-2">
+            <p className="text-[9px] font-extrabold opacity-80 uppercase tracking-widest mb-1">Mulai Hari Ini</p>
+            <p className="text-[17px] font-extrabold tracking-tight">Rekam Kehadiran</p>
+          </div>
+          <button
+            onClick={handleFabClick}
+            className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
+          >
+            <Fingerprint className="h-7 w-7 text-[#7139ff]" />
+          </button>
+        </div>
+
+        {/* Quick Links / Layanan Cepat */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="text-lg font-bold text-slate-800">Layanan Cepat</h3>
+            <Link href="/dashboard/employee/menu" className="flex items-center text-[10px] text-indigo-600 font-bold uppercase tracking-widest">
+              SEMUA <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            <Link href="/dashboard/attendance" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#6b34ff] flex items-center justify-center shadow-lg shadow-indigo-200">
+                <Fingerprint className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">ABSENSI</span>
+            </Link>
+            <Link href="/dashboard/employee" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#00a8ff] flex items-center justify-center shadow-lg shadow-blue-200">
+                <Calendar className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">CUTI & IZIN</span>
+            </Link>
+            <Link href="/dashboard/employee" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#f39c12] flex items-center justify-center shadow-lg shadow-orange-200">
+                <Send className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">DINAS LUAR</span>
+            </Link>
+            <Link href="/dashboard/employee" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#ffa502] flex items-center justify-center shadow-lg shadow-yellow-200">
+                <Zap className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">LEMBUR</span>
+            </Link>
+            
+            <Link href="/dashboard/profile" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#34495e] flex items-center justify-center shadow-lg shadow-slate-200">
+                <Lock className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">PASSWORD</span>
+            </Link>
+            <Link href="/dashboard/employee/menu" className="flex flex-col items-center gap-2">
+              <div className="w-full aspect-square rounded-[20px] bg-[#a55eea] flex items-center justify-center shadow-lg shadow-purple-200">
+                <Grid className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">LAINNYA</span>
+            </Link>
+          </div>
+        </div>
 
         {/* Activity List */}
         <div className="px-4 mb-4">
