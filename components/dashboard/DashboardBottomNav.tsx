@@ -57,6 +57,8 @@ export default function DashboardBottomNav({ role, onFabClick }: DashboardBottom
       localStorage.removeItem(`lastAttendancePhoto_${userRole}`)
       localStorage.removeItem('user_role')
       await supabase.auth.signOut()
+      window.location.href = href
+      return
     }
     router.push(href)
   }
