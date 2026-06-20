@@ -17,11 +17,11 @@ export default function DashboardPage() {
     }
 
     // Direct routing execution
-    if (userRole === "admin" || userRole === "superadmin") {
+    if (userRole === "super_admin" || userRole === "admin" || userRole === "superadmin" || userRole === "admin_akademik") {
       router.replace("/dashboard/admin");
-    } else if (userRole === "lecturer") {
+    } else if (userRole === "lecturer" || userRole === "dosen") {
       router.replace("/dashboard/lecturer");
-    } else if (userRole === "employee") {
+    } else if (userRole === "employee" || userRole === "karyawan" || userRole === "pegawai") {
       router.replace("/dashboard/employee");
     } else {
       router.replace("/dashboard/student");

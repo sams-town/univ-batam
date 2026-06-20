@@ -305,6 +305,9 @@ export default function LoginPage() {
       // Redirect based on role
       const role = profile?.role?.name || 'mahasiswa'
       
+      // Simpan role di localStorage untuk navigasi sidebar dan routing aman
+      localStorage.setItem('user_role', role)
+      
       switch (role) {
         case 'super_admin':
         case 'admin':
@@ -316,6 +319,7 @@ export default function LoginPage() {
           break
         case 'employee':
         case 'karyawan':
+        case 'pegawai':
           router.push('/dashboard/employee')
           break
         case 'mahasiswa':
