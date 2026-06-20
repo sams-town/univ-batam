@@ -1,0 +1,78 @@
+export interface Profile {
+  id: string
+  role_id?: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  avatar_url?: string
+  phone?: string
+  address_ktp?: string
+  address_domicile?: string
+  gender?: "laki-laki" | "perempuan" | ""
+  place_of_birth?: string
+  date_of_birth?: string
+  role?: {
+    id: string
+    name: string
+  }
+}
+
+export interface Student {
+  id: string
+  nim?: string
+  program_id?: string
+  profile_id?: string
+  enrollment_year?: number
+}
+
+export interface Program {
+  id: string
+  name?: string
+  department_id?: string
+}
+
+export interface Department {
+  id: string
+  name?: string
+  faculty_id?: string
+}
+
+export interface Faculty {
+  id: string
+  name?: string
+}
+
+export interface Lecturer {
+  id: string
+  nip?: string
+  profile_id?: string
+}
+
+export interface SKSPayment {
+  id: string
+  student_id?: string
+  semester_id?: string
+  semester?: { id?: string; name: string; [key: string]: any }
+  status?: "paid" | "pending" | "overdue"
+  total_amount?: number
+  total_credits?: number
+  credit_price?: number
+  due_date?: Date | string
+  payment_date?: Date | string
+  payment_method?: string
+  transaction_id?: string
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export interface PaymentItem {
+  id: string
+  payment_id?: string
+  course_id?: string
+  course_name?: string
+  credits?: number
+  price?: number
+  created_at?: Date | string
+  name?: string
+  amount?: number
+}

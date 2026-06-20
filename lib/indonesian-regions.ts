@@ -1,0 +1,107 @@
+export const indonesianProvinces = [
+  "Aceh",
+  "Bali",
+  "Bangka Belitung",
+  "Banten",
+  "Bengkulu",
+  "DI Yogyakarta",
+  "DKI Jakarta",
+  "Gorontalo",
+  "Jambi",
+  "Jawa Barat",
+  "Jawa Tengah",
+  "Jawa Timur",
+  "Kalimantan Barat",
+  "Kalimantan Selatan",
+  "Kalimantan Tengah",
+  "Kalimantan Timur",
+  "Kalimantan Utara",
+  "Kepulauan Riau",
+  "Lampung",
+  "Maluku",
+  "Maluku Utara",
+  "Nusa Tenggara Barat",
+  "Nusa Tenggara Timur",
+  "Papua",
+  "Papua Barat",
+  "Papua Selatan",
+  "Papua Tengah",
+  "Papua Pegunungan",
+  "Riau",
+  "Sulawesi Barat",
+  "Sulawesi Selatan",
+  "Sulawesi Tengah",
+  "Sulawesi Tenggara",
+  "Sulawesi Utara",
+  "Sumatera Barat",
+  "Sumatera Selatan",
+  "Sumatera Utara",
+]
+
+export const getCitiesByProvince = (province: string) => {
+  const cities: Record<string, string[]> = {
+    "Aceh": ["Banda Aceh", "Langsa", "Lhokseumawe", "Sabang", "Subulussalam"],
+    "Bali": ["Denpasar", "Badung", "Gianyar", "Tabanan", "Bangli"],
+    "Bangka Belitung": ["Pangkal Pinang", "Tanjung Pandan"],
+    "Banten": ["Serang", "Tangerang", "Tangerang Selatan", "Cilegon"],
+    "Bengkulu": ["Bengkulu"],
+    "DI Yogyakarta": ["Yogyakarta", "Sleman", "Bantul", "Gunung Kidul", "Kulon Progo"],
+    "DKI Jakarta": ["Jakarta Pusat", "Jakarta Utara", "Jakarta Selatan", "Jakarta Timur", "Jakarta Barat", "Kepulauan Seribu"],
+    "Gorontalo": ["Gorontalo"],
+    "Jambi": ["Jambi", "Sungai Penuh"],
+    "Jawa Barat": ["Bandung", "Bekasi", "Bogor", "Cimahi", "Cirebon", "Depok", "Sukabumi", "Tasikmalaya", "Banjar"],
+    "Jawa Tengah": ["Semarang", "Surakarta", "Salatiga", "Magelang", "Pekalongan", "Tegal"],
+    "Jawa Timur": ["Surabaya", "Malang", "Kediri", "Madiun", "Pasuruan", "Probolinggo", "Blitar", "Mojokerto", "Batu"],
+    "Kalimantan Barat": ["Pontianak", "Singkawang"],
+    "Kalimantan Selatan": ["Banjarmasin", "Banjarbaru"],
+    "Kalimantan Tengah": ["Palangka Raya"],
+    "Kalimantan Timur": ["Samarinda", "Balikpapan", "Bontang"],
+    "Kalimantan Utara": ["Tanjung Selor"],
+    "Kepulauan Riau": ["Batam", "Tanjung Pinang"],
+    "Lampung": ["Bandar Lampung", "Metro"],
+    "Maluku": ["Ambon", "Tual"],
+    "Maluku Utara": ["Ternate", "Tidore"],
+    "Nusa Tenggara Barat": ["Mataram", "Bima"],
+    "Nusa Tenggara Timur": ["Kupang"],
+    "Papua": ["Jayapura"],
+    "Papua Barat": ["Manokwari", "Sorong"],
+    "Papua Selatan": ["Merauke"],
+    "Papua Tengah": ["Nabire"],
+    "Papua Pegunungan": ["Wamena"],
+    "Riau": ["Pekanbaru", "Dumai"],
+    "Sulawesi Barat": ["Mamuju"],
+    "Sulawesi Selatan": ["Makassar", "Palopo", "Parepare"],
+    "Sulawesi Tengah": ["Palu"],
+    "Sulawesi Tenggara": ["Kendari", "Baubau"],
+    "Sulawesi Utara": ["Manado", "Bitung", "Tomohon"],
+    "Sumatera Barat": ["Padang", "Bukittinggi", "Payakumbuh", "Pariaman", "Sawahlunto", "Solok"],
+    "Sumatera Selatan": ["Palembang", "Prabumulih", "Pagar Alam", "Lubuklinggau"],
+    "Sumatera Utara": ["Medan", "Binjai", "Tanjungbalai", "Pematangsiantar", "Tebing Tinggi", "Padang Sidempuan", "Gunungsitoli"],
+  }
+  return cities[province] || []
+}
+
+export const getDistrictsByCity = (city: string) => {
+  const districts: Record<string, string[]> = {
+    "Jakarta Pusat": ["Gambir", "Kemayoran", "Menteng", "Senen", "Tanah Abang"],
+    "Jakarta Utara": ["Cilincing", "Kelapa Gading", "Koja", "Pademangan", "Penjaringan", "Tanjung Priok"],
+    "Jakarta Selatan": ["Cilandak", "Jagakarsa", "Kebayoran Baru", "Kebayoran Lama", "Mampang Prapatan", "Pasar Minggu", "Pesanggrahan", "Setiabudi", "Tebet"],
+    "Jakarta Timur": ["Cakung", "Cipayung", "Ciracas", "Duren Sawit", "Jatinegara", "Kramat Jati", "Makasar", "Matraman", "Pasar Rebo", "Pulo Gadung"],
+    "Jakarta Barat": ["Cengkareng", "Grogol Petamburan", "Kebon Jeruk", "Kalideres", "Palmerah", "Taman Sari", "Tambora"],
+    "Bandung": ["Bojongloa Kaler", "Bojongloa Kidul", "Cidadap", "Cicendo", "Cimahi Selatan", "Cimahi Tengah", "Cimahi Utara", "Cirebon Selatan", "Cirebon Utara", "Dago", "Kiaracondong", "Lengkong", "Mandalajati", "Panyileukan", "Regol", "Sukajadi", "Sukasari", "Ujung Berung"],
+    "Surabaya": ["Asemrowo", "Benowo", "Bubutan", "Bulak", "Dukuh Pakis", "Gayungan", "Genteng", "Gubeng", "Gunung Anyar", "Jambangan", "Karang Pilang", "Kenjeran", "Krembangan", "Lakarsantri", "Mulyorejo", "Pabean Cantikan", "Pakal", "Rungkut", "Sambikerep", "Sawahan", "Semampir", "Simokerto", "Sukolilo", "Tandes", "Tambaksari", "Tegalsari", "Wonocolo", "Wonokromo"],
+    "Medan": ["Medan Amplas", "Medan Area", "Medan Baru", "Medan Belawan", "Medan Denai", "Medan Deli", "Medan Helvetia", "Medan Johor", "Medan Kota", "Medan Labuhan", "Medan Maimun", "Medan Marelan", "Medan Polonia", "Medan Selayang", "Medan Sunggal", "Medan Tuntungan", "Medan Perjuangan", "Medan Timur", "Medan Barat"],
+  }
+  return districts[city] || []
+}
+
+export const getVillagesByDistrict = (district: string) => {
+  const villages: Record<string, string[]> = {
+    "Gambir": ["Cideng", "Duri Pulo", "Gambir", "Kebon Kelapa", "Petojo Selatan", "Petojo Utara"],
+    "Kemayoran": ["Cempaka Putih Timur", "Cempaka Putih Barat", "Galur", "Gunung Sahari Selatan", "Kebon Kosong", "Kemayoran", "Serdang", "Sumur Batu", "Utan Panjang"],
+    "Menteng": ["Cikini", "Kebon Sirih", "Menteng", "Pegangsaan", "Petamburan"],
+    "Senen": ["Bungur", "Kampung Bali", "Kenari", "Kwitang", "Paseban", "Senen"],
+    "Tanah Abang": ["Bendungan Hilir", "Karet Tengsin", "Kebon Kacang", "Kebon Melati", "Petamburan", "Tanah Abang"],
+  }
+  return villages[district] || []
+}

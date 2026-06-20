@@ -1,0 +1,577 @@
+﻿
+> mahasiswa-1@0.1.0 lint
+> eslint
+
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\academic\page.tsx
+  6:16  warning  'Edit' is defined but never used    @typescript-eslint/no-unused-vars
+  6:22  warning  'Trash2' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\layout.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\layout.tsx:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     setLocalStorageRole(localStorage.getItem("user_role"));
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   const isAdmin =  react-hooks/set-state-in-effect
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\lecturers\page.tsx
+  27:5  error  Error: Cannot access variable before it is declared
+
+`loadLecturers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\lecturers\page.tsx:27:5
+  25 |
+  26 |   useEffect(() => {
+> 27 |     loadLecturers()
+     |     ^^^^^^^^^^^^^ `loadLecturers` accessed before it is declared
+  28 |   }, [])
+  29 |
+  30 |   async function loadLecturers() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\lecturers\page.tsx:30:3
+  28 |   }, [])
+  29 |
+> 30 |   async function loadLecturers() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |       .from('lecturers')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |       .select('*, department:departments(name, code), profile:profiles(first_name, last_name, email, phone)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |       .order('id')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |     setLecturers(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |   }
+     | ^^^^ `loadLecturers` is declared here
+  39 |
+  40 |   if (loading) {
+  41 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\page.tsx
+   3:20  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  23:3   warning  'UserCheck' is defined but never used  @typescript-eslint/no-unused-vars
+  24:3   warning  'UserX' is defined but never used      @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\payroll\page.tsx
+  4:52  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\reports\page.tsx
+  3:52  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  8:28  warning  'BarChart3' is defined but never used        @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\settings\page.tsx
+  4:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+  5:20  warning  'Bell' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\students\page.tsx
+  88:5  error  Error: Cannot access variable before it is declared
+
+`loadStudents` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\students\page.tsx:88:5
+  86 |
+  87 |   useEffect(() => {
+> 88 |     loadStudents()
+     |     ^^^^^^^^^^^^ `loadStudents` accessed before it is declared
+  89 |   }, [])
+  90 |
+  91 |   async function loadStudents() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\admin\students\page.tsx:91:3
+   89 |   }, [])
+   90 |
+>  91 |   async function loadStudents() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  92 |     const { data } = await supabase
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  93 |       .from('students')
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  94 |       .select('*, program:programs(name, code), profile:profiles(first_name, last_name, email, phone)')
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  95 |       .order('id')
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |     
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |     // Use dummy data if no students found in database
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |     setStudents(data && data.length > 0 ? data : dummyStudentsData)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |     setLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |   }
+      | ^^^^ `loadStudents` is declared here
+  101 |
+  102 |   if (loading) {
+  103 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\employee\layout.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\laragon\www\mahasiswa-1\app\dashboard\employee\layout.tsx:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     setLocalStorageRole(localStorage.getItem("user_role"));
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   const isEmployee =  react-hooks/set-state-in-effect
+
+C:\laragon\www\mahasiswa-1\app\dashboard\lecturer\layout.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\laragon\www\mahasiswa-1\app\dashboard\lecturer\layout.tsx:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     setLocalStorageRole(localStorage.getItem("user_role"));
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   const isLecturer =  react-hooks/set-state-in-effect
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\academic-years\page.tsx
+  25:5  error  Error: Cannot access variable before it is declared
+
+`loadYears` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\academic-years\page.tsx:25:5
+  23 |
+  24 |   useEffect(() => {
+> 25 |     loadYears()
+     |     ^^^^^^^^^ `loadYears` accessed before it is declared
+  26 |   }, [])
+  27 |
+  28 |   async function loadYears() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\academic-years\page.tsx:28:3
+  26 |   }, [])
+  27 |
+> 28 |   async function loadYears() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .from('academic_years')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |       .order('name', { ascending: false })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setYears(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |   }
+     | ^^^^ `loadYears` is declared here
+  37 |
+  38 |   if (loading) {
+  39 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\classrooms\page.tsx
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadClassrooms` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\classrooms\page.tsx:24:5
+  22 |
+  23 |   useEffect(() => {
+> 24 |     loadClassrooms()
+     |     ^^^^^^^^^^^^^^ `loadClassrooms` accessed before it is declared
+  25 |   }, [])
+  26 |
+  27 |   async function loadClassrooms() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\classrooms\page.tsx:27:3
+  25 |   }, [])
+  26 |
+> 27 |   async function loadClassrooms() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('classrooms')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     setClassrooms(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |   }
+     | ^^^^ `loadClassrooms` is declared here
+  36 |
+  37 |   if (loading) {
+  38 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\courses\page.tsx
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadCourses` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\courses\page.tsx:24:5
+  22 |
+  23 |   useEffect(() => {
+> 24 |     loadCourses()
+     |     ^^^^^^^^^^^ `loadCourses` accessed before it is declared
+  25 |   }, [])
+  26 |
+  27 |   async function loadCourses() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\courses\page.tsx:27:3
+  25 |   }, [])
+  26 |
+> 27 |   async function loadCourses() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('courses')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     setCourses(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |   }
+     | ^^^^ `loadCourses` is declared here
+  36 |
+  37 |   if (loading) {
+  38 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\departments\page.tsx
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadDepartments` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\departments\page.tsx:24:5
+  22 |
+  23 |   useEffect(() => {
+> 24 |     loadDepartments()
+     |     ^^^^^^^^^^^^^^^ `loadDepartments` accessed before it is declared
+  25 |   }, [])
+  26 |
+  27 |   async function loadDepartments() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\departments\page.tsx:27:3
+  25 |   }, [])
+  26 |
+> 27 |   async function loadDepartments() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('departments')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*, faculty:faculties(name)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     setDepartments(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |   }
+     | ^^^^ `loadDepartments` is declared here
+  36 |
+  37 |   if (loading) {
+  38 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\faculties\page.tsx
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadFaculties` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\faculties\page.tsx:24:5
+  22 |
+  23 |   useEffect(() => {
+> 24 |     loadFaculties()
+     |     ^^^^^^^^^^^^^ `loadFaculties` accessed before it is declared
+  25 |   }, [])
+  26 |
+  27 |   async function loadFaculties() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\faculties\page.tsx:27:3
+  25 |   }, [])
+  26 |
+> 27 |   async function loadFaculties() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('faculties')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     setFaculties(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |   }
+     | ^^^^ `loadFaculties` is declared here
+  36 |
+  37 |   if (loading) {
+  38 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\layout.tsx
+  3:10  warning  'useState' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\lecturers\page.tsx
+  26:5  error  Error: Cannot access variable before it is declared
+
+`loadLecturers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\lecturers\page.tsx:26:5
+  24 |
+  25 |   useEffect(() => {
+> 26 |     loadLecturers()
+     |     ^^^^^^^^^^^^^ `loadLecturers` accessed before it is declared
+  27 |   }, [])
+  28 |
+  29 |   async function loadLecturers() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\lecturers\page.tsx:29:3
+  27 |   }, [])
+  28 |
+> 29 |   async function loadLecturers() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .from('lecturers')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |       .select('*, profile:profiles(first_name, last_name, email)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |       .order('id')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     setLecturers(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |   }
+     | ^^^^ `loadLecturers` is declared here
+  38 |
+  39 |   if (loading) {
+  40 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\programs\page.tsx
+  25:5  error  Error: Cannot access variable before it is declared
+
+`loadPrograms` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\programs\page.tsx:25:5
+  23 |
+  24 |   useEffect(() => {
+> 25 |     loadPrograms()
+     |     ^^^^^^^^^^^^ `loadPrograms` accessed before it is declared
+  26 |   }, [])
+  27 |
+  28 |   async function loadPrograms() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\programs\page.tsx:28:3
+  26 |   }, [])
+  27 |
+> 28 |   async function loadPrograms() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .from('programs')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .select('*, department:departments(name)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |       .order('name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setPrograms(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |   }
+     | ^^^^ `loadPrograms` is declared here
+  37 |
+  38 |   if (loading) {
+  39 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\semesters\page.tsx
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadSemesters` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\semesters\page.tsx:24:5
+  22 |
+  23 |   useEffect(() => {
+> 24 |     loadSemesters()
+     |     ^^^^^^^^^^^^^ `loadSemesters` accessed before it is declared
+  25 |   }, [])
+  26 |
+  27 |   async function loadSemesters() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\semesters\page.tsx:27:3
+  25 |   }, [])
+  26 |
+> 27 |   async function loadSemesters() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('semesters')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*, academic_year:academic_years(name)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('academic_year_id', { ascending: false })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     setSemesters(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |   }
+     | ^^^^ `loadSemesters` is declared here
+  36 |
+  37 |   if (loading) {
+  38 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\students\page.tsx
+  27:5  error  Error: Cannot access variable before it is declared
+
+`loadStudents` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\students\page.tsx:27:5
+  25 |
+  26 |   useEffect(() => {
+> 27 |     loadStudents()
+     |     ^^^^^^^^^^^^ `loadStudents` accessed before it is declared
+  28 |   }, [])
+  29 |
+  30 |   async function loadStudents() {
+
+C:\laragon\www\mahasiswa-1\app\dashboard\master\students\page.tsx:30:3
+  28 |   }, [])
+  29 |
+> 30 |   async function loadStudents() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |       .from('students')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |       .select('*, program:programs(name), profile:profiles(first_name, last_name, email)')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |       .order('id')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |     setStudents(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |   }
+     | ^^^^ `loadStudents` is declared here
+  39 |
+  40 |   if (loading) {
+  41 |     return (  react-hooks/immutability
+
+C:\laragon\www\mahasiswa-1\app\dashboard\payments\page.tsx
+    3:20  warning  'useEffect' is defined but never used             @typescript-eslint/no-unused-vars
+  140:11  warning  'profile' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  141:20  warning  'setPayments' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\profile\page.tsx
+  11:10  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\schedules\page.tsx
+    5:29  warning  'CardHeader' is defined but never used               @typescript-eslint/no-unused-vars
+    5:41  warning  'CardTitle' is defined but never used                @typescript-eslint/no-unused-vars
+    8:28  warning  'CalendarIcon' is defined but never used             @typescript-eslint/no-unused-vars
+  109:7   warning  'dummyLecturers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\dashboard\student\layout.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\laragon\www\mahasiswa-1\app\dashboard\student\layout.tsx:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     setLocalStorageRole(localStorage.getItem("user_role"));
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   const isStudent =  react-hooks/set-state-in-effect
+
+C:\laragon\www\mahasiswa-1\app\dashboard\student\page.tsx
+    3:28   warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+    9:110  warning  'X' is defined but never used          @typescript-eslint/no-unused-vars
+    9:113  warning  'Check' is defined but never used      @typescript-eslint/no-unused-vars
+  345:38   warning  'token' is defined but never used      @typescript-eslint/no-unused-vars
+
+C:\laragon\www\mahasiswa-1\app\login\page.tsx
+   10:37  warning  'GraduationCap' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  108:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  155:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\laragon\www\mahasiswa-1\components\layout\Sidebar.tsx
+   14:3   warning  'School' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   15:3   warning  'Building' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   16:3   warning  'Clock' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   24:20  warning  'Graduation' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   25:13  warning  'Library' is defined but never used                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   29:3   warning  'Briefcase' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   38:9   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  235:20  warning  'loading' is assigned a value but never used                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  242:30  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  313:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\laragon\www\mahasiswa-1\components\ui\select.tsx
+  4:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\laragon\www\mahasiswa-1\components\ui\tabs.tsx
+  2:10  warning  'cva' is defined but never used           @typescript-eslint/no-unused-vars
+  2:20  warning  'VariantProps' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 54 problems (18 errors, 36 warnings)
+
