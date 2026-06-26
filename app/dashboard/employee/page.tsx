@@ -1,20 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  Camera,
-  X,
   CheckCircle2,
   Clock,
-  User,
   LogIn,
   LogOut,
   CreditCard,
   FileText,
   Calendar,
   Settings,
-  GraduationCap,
-  MapPin
+  GraduationCap
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -62,12 +58,6 @@ const quickMenuItems = [
 export default function EmployeeDashboardPage() {
   const { profile, user } = useAuth()
 
-  // Camera state
-  const [cameraActive, setCameraActive] = useState(false)
-  const [cameraLoading, setCameraLoading] = useState(false)
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
-  const [cameraError, setCameraError] = useState<string | null>(null)
-
   // Attendance state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -77,10 +67,6 @@ export default function EmployeeDashboardPage() {
     isLate: boolean
     lateMinutes: number
   } | null>(null)
-
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
 
   // Live time
   const [currentTime, setCurrentTime] = useState('00:00:00')
@@ -113,86 +99,8 @@ export default function EmployeeDashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Stop camera function
-  const stopCamera = () => {
-    if (streamRef.current) {
-      const tracks = streamRef.current.getTracks()
-      tracks.forEach((t) => t.stop())
-      streamRef.current = null
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-    setCameraActive(false)
-  }
-
-  // Start camera function
-  const startCamera = async () => {
-    if (cameraActive || cameraLoading) return
-    setCameraLoading(true)
-    setCameraError(null)
-    setCapturedPhoto(null)
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          facingMode: 'user'
-        },
-        audio: false
-      })
-
-      streamRef.current = stream
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play()
-        }
-      }
-
-      setCameraActive(true)
-    } catch (err: any) {
-      console.error('Camera error:', err)
-      if (err.name === 'NotAllowedError') {
-        setCameraError('Izin kamera ditolak. Silakan izinkan akses kamera.')
-      } else if (err.name === 'NotFoundError') {
-        setCameraError('Kamera tidak ditemukan di perangkat Anda.')
-      } else {
-        setCameraError('Gagal mengakses kamera. Silakan coba lagi.')
-      }
-    } finally {
-      setCameraLoading(false)
-    }
-  }
-
-  // Capture photo function
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d')
-      if (context) {
-        canvasRef.current.width = videoRef.current.videoWidth
-        canvasRef.current.height = videoRef.current.videoHeight
-        context.drawImage(videoRef.current, 0, 0)
-        const photoUrl = canvasRef.current.toDataURL('image/png')
-        setCapturedPhoto(photoUrl)
-        stopCamera()
-      }
-    }
-  }
-
   // Handle attendance
   const handleAttendance = async (type: 'in' | 'out') => {
-    if (!capturedPhoto) {
-      if (!cameraActive) {
-        startCamera()
-      } else {
-        capturePhoto()
-      }
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
@@ -202,7 +110,7 @@ export default function EmployeeDashboardPage() {
         body: JSON.stringify({
           userId: user?.id,
           type,
-          photoUrl: capturedPhoto,
+          photoUrl: null,
           location: null
         })
       })
@@ -228,7 +136,6 @@ export default function EmployeeDashboardPage() {
   // Reset after success
   const handleSuccessClose = () => {
     setShowSuccessModal(false)
-    setCapturedPhoto(null)
     setAttendanceResult(null)
   }
 
@@ -268,177 +175,57 @@ export default function EmployeeDashboardPage() {
         </div>
 
         {/* Main Attendance Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Left: Camera Section */}
+        <div className="space-y-6 max-w-2xl mx-auto mb-12">
+          {/* Attendance Buttons */}
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
-            <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Camera className="h-6 w-6 text-blue-600" />
-              Kamera Absensi
-            </h2>
-
-            {/* Camera Viewfinder */}
-            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden aspect-video mb-4">
-              {/* Video Element */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className={`absolute inset-0 w-full h-full object-cover ${cameraActive && !capturedPhoto ? 'block' : 'hidden'}`}
-              />
-
-              {/* Captured Photo */}
-              {capturedPhoto && (
-                <div className="absolute inset-0">
-                  <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover" />
-                  <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1.5 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Foto Diambil
-                  </div>
-                </div>
-              )}
-
-              {/* Placeholder */}
-              {!cameraActive && !capturedPhoto && !cameraLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-6">
-                  <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-4 border border-white/20">
-                    <Camera className="h-12 w-12 text-white/70" />
-                  </div>
-                  <p className="text-lg font-medium text-white/80">Kamera tidak aktif</p>
-                  <p className="text-sm text-white/60 mt-1">Klik tombol di bawah untuk memulai</p>
-                </div>
-              )}
-
-              {/* Loading */}
-              {cameraLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
-                  <div className="h-12 w-12 border-4 border-slate-600 border-t-blue-400 rounded-full animate-spin mb-4" />
-                  <span className="text-lg">Membuka kamera...</span>
-                </div>
-              )}
-
-              {/* Error */}
-              {cameraError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 p-6 text-center">
-                  <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-                    <X className="h-10 w-10 text-red-500" />
-                  </div>
-                  <p className="text-red-300 font-semibold text-lg max-w-xs">{cameraError}</p>
-                </div>
-              )}
-
-              {/* Camera Guide Overlay */}
-              {cameraActive && !capturedPhoto && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-56 h-72 border-3 border-dashed border-blue-400/60 rounded-[50%]" />
-                </div>
-              )}
-
-              <canvas ref={canvasRef} className="hidden" />
+            <h2 className="text-xl font-bold text-slate-800 mb-6">Absensi Hari Ini</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                onClick={() => handleAttendance('in')}
+                disabled={isSubmitting}
+                className="h-24 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
+              >
+                <LogIn className="h-8 w-8" />
+                <span>Absen Masuk</span>
+              </Button>
+              <Button
+                onClick={() => handleAttendance('out')}
+                disabled={isSubmitting}
+                className="h-24 text-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
+              >
+                <LogOut className="h-8 w-8" />
+                <span>Absen Keluar</span>
+              </Button>
             </div>
-
-            {/* Camera Controls */}
-            <div className="flex gap-3">
-              {!cameraActive && !capturedPhoto && (
-                <Button
-                  onClick={startCamera}
-                  disabled={cameraLoading}
-                  className="flex-1 h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg rounded-2xl"
-                >
-                  <Camera className="h-5 w-5 mr-2" />
-                  {cameraLoading ? 'Membuka...' : 'Buka Kamera'}
-                </Button>
-              )}
-
-              {cameraActive && !capturedPhoto && (
-                <>
-                  <Button
-                    onClick={capturePhoto}
-                    className="flex-1 h-14 text-base font-semibold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg rounded-2xl"
-                  >
-                    <Camera className="h-5 w-5 mr-2" />
-                    Ambil Foto
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={stopCamera}
-                    className="h-14 text-base font-semibold rounded-2xl border border-slate-200"
-                  >
-                    <X className="h-5 w-5 mr-2" />
-                    Tutup
-                  </Button>
-                </>
-              )}
-
-              {capturedPhoto && (
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setCapturedPhoto(null)
-                    startCamera()
-                  }}
-                  className="flex-1 h-14 text-base font-semibold rounded-2xl border border-slate-200"
-                >
-                  <Camera className="h-5 w-5 mr-2" />
-                  Ulangi Foto
-                </Button>
-              )}
-            </div>
+            {isSubmitting && (
+              <div className="text-center mt-4 text-slate-600 flex items-center justify-center gap-2">
+                <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                Memproses absensi...
+              </div>
+            )}
           </div>
 
-          {/* Right: Attendance Buttons */}
-          <div className="space-y-6">
-            {/* Attendance Buttons */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Absensi Hari Ini</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button
-                  onClick={() => handleAttendance('in')}
-                  disabled={isSubmitting}
-                  className="h-24 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
-                >
-                  <LogIn className="h-8 w-8" />
-                  <span>Absen Masuk</span>
-                </Button>
-                <Button
-                  onClick={() => handleAttendance('out')}
-                  disabled={isSubmitting}
-                  className="h-24 text-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
-                >
-                  <LogOut className="h-8 w-8" />
-                  <span>Absen Keluar</span>
-                </Button>
-              </div>
-              {isSubmitting && (
-                <div className="text-center mt-4 text-slate-600 flex items-center justify-center gap-2">
-                  <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                  Memproses absensi...
-                </div>
-              )}
-            </div>
-
-            {/* Quick Menu */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
-              <h2 className="text-xl font-bold text-slate-800 mb-4">Akses Cepat Menu Karyawan</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                {quickMenuItems.map((item) => {
-                  const IconComponent = item.icon
-                  return (
-                    <a
-                      key={item.id}
-                      href={item.link}
-                      className="group flex flex-col items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
-                    >
-                      <div className={`w-14 h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform mb-3`}>
-                        <IconComponent className="h-7 w-7 text-white" />
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700 text-center">
-                        {item.label}
-                      </span>
-                    </a>
-                  )
-                })}
-              </div>
+          {/* Quick Menu */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
+            <h2 className="text-xl font-bold text-slate-800 mb-4">Akses Cepat Menu Karyawan</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {quickMenuItems.map((item) => {
+                const IconComponent = item.icon
+                return (
+                  <a
+                    key={item.id}
+                    href={item.link}
+                    className="group flex flex-col items-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                  >
+                    <div className={`w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform mb-2`}>
+                      <IconComponent className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
+                    </div>
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-700 text-center leading-tight">
+                      {item.label}
+                    </span>
+                  </a>
+                )
+              })}
             </div>
           </div>
         </div>
