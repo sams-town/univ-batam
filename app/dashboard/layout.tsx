@@ -16,7 +16,7 @@ export default function DashboardLayout({
     setUserRole(localStorage.getItem('user_role'))
   }, [])
 
-  const isMobileRole = userRole && ['mahasiswa', 'dosen', 'employee', 'karyawan'].includes(userRole)
+  const isMobileRole = userRole && ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai'].includes(userRole)
 
   return (
     <div className="min-h-screen flex flex-col">

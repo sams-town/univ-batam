@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, User, Clock, CheckCircle2, X, Plus, Edit, Trash2, FileText, Download, ArrowLeft, ArrowRight, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,15 +13,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 
-// Mock data
+// Mock data for Admin
 const mockKaryawan = [
   { id: '1', nip: '2201001', nama: 'Ahmad Rizky', jabatan: 'Staff IT' },
   { id: '2', nip: '2201002', nama: 'Siti Aminah', jabatan: 'Staff Keuangan' },
   { id: '3', nip: '2201003', nama: 'Budi Santoso', jabatan: 'Supervisor' },
 ]
 
-const mockCuti = [
+const initialMockCuti = [
   {
     id: '1',
     karyawanId: '1',
@@ -47,7 +49,6 @@ const mockCuti = [
 ]
 
 const jenisCuti = ['Cuti Tahunan', 'Cuti Sakit', 'Cuti Melahirkan', 'Cuti Besar', 'Izin', 'Lainnya']
-const statusCuti = ['Menunggu Persetujuan', 'Disetujui', 'Ditolak']
 
 const initialFormData = {
   karyawanId: '',
@@ -59,21 +60,110 @@ const initialFormData = {
 }
 
 export default function CutiPage() {
+  const { profile } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentTab, setCurrentTab] = useState('pengajuan')
   const [formData, setFormData] = useState(initialFormData)
+  const [cutiList, setCutiList] = useState(initialMockCuti)
+  const [employeeNip, setEmployeeNip] = useState<string>('')
+
+  // Determine user role (Admin vs Employee/Pegawai)
+  const userRole = (typeof profile?.role === 'object' ? profile.role.name : profile?.role || '').toLowerCase()
+  const isLocalStorageAdmin = typeof window !== 'undefined' && ['admin', 'super_admin', 'superadmin', 'admin_akademik'].includes(localStorage.getItem('user_role') || '')
+  const isAdmin = ['super_admin', 'superadmin', 'admin', 'admin_akademik'].includes(userRole) || isLocalStorageAdmin
+
+  const employeeName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Pegawai'
+
+  // Fetch employee NIP if not an admin
+  useEffect(() => {
+    if (profile?.id && !isAdmin) {
+      const fetchNip = async () => {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('nip')
+          .eq('profile_id', profile.id)
+          .maybeSingle()
+        if (data?.nip) {
+          setEmployeeNip(data.nip)
+        }
+      }
+      fetchNip()
+    }
+  }, [profile, isAdmin])
+
+  // Seed a self leave record waiting for approval for demonstration/readability
+  useEffect(() => {
+    if (profile && !isAdmin) {
+      const hasSelfCuti = cutiList.some(c => c.nama === employeeName)
+      if (!hasSelfCuti) {
+        const selfCuti = {
+          id: 'self-1',
+          karyawanId: profile.id,
+          nip: employeeNip || '2201005',
+          nama: employeeName,
+          jenis: 'Cuti Tahunan',
+          tanggalMulai: '2024-06-24',
+          tanggalSelesai: '2024-06-26',
+          alasan: 'Urusan keluarga',
+          status: 'Menunggu Persetujuan',
+        }
+        setCutiList(prev => [selfCuti, ...prev])
+      }
+    }
+  }, [profile, employeeNip, isAdmin, employeeName, cutiList])
 
   const resetForm = () => {
     setFormData(initialFormData)
     setCurrentTab('pengajuan')
   }
 
+  const handleSave = () => {
+    // Basic validation
+    if (!formData.jenis || !formData.tanggalMulai || !formData.tanggalSelesai || !formData.alasan) {
+      alert('Mohon isi semua field wajib!')
+      return
+    }
+
+    const newId = (cutiList.length + 1).toString()
+    const newCuti = {
+      id: newId,
+      karyawanId: isAdmin ? formData.karyawanId : (profile?.id || '1'),
+      nip: isAdmin 
+        ? (mockKaryawan.find(k => k.id === formData.karyawanId)?.nip || '2201001')
+        : (employeeNip || '2201005'),
+      nama: isAdmin
+        ? (mockKaryawan.find(k => k.id === formData.karyawanId)?.nama || 'Ahmad Rizky')
+        : employeeName,
+      jenis: formData.jenis,
+      tanggalMulai: formData.tanggalMulai,
+      tanggalSelesai: formData.tanggalSelesai,
+      alasan: formData.alasan,
+      status: 'Menunggu Persetujuan',
+    }
+
+    setCutiList([newCuti, ...cutiList])
+    setIsModalOpen(false)
+    resetForm()
+    alert('Pengajuan cuti berhasil disimpan!')
+  }
+
+  // Filter leave requests: admins see all, employees see only their own
+  const displayedCuti = isAdmin
+    ? cutiList
+    : cutiList.filter(cuti => cuti.nama.toLowerCase() === employeeName.toLowerCase() || cuti.karyawanId === profile?.id)
+
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
+    <div className="p-6 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">Data Cuti Karyawan</h1>
-          <p className="text-slate-500 mt-2">Review and manage employee leave requests and medical certificates.</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
+            {isAdmin ? 'Data Cuti Karyawan' : 'Pengajuan Cuti Saya'}
+          </h1>
+          <p className="text-slate-500 mt-2">
+            {isAdmin 
+              ? 'Review and manage employee leave requests and medical certificates.'
+              : 'Ajukan dan pantau status cuti atau izin sakit Anda.'}
+          </p>
         </div>
         <Dialog open={isModalOpen} onOpenChange={(open) => {
           if (!open) resetForm()
@@ -100,7 +190,7 @@ export default function CutiPage() {
                     <X className="h-4 w-4 mr-2" />
                     Batal
                   </Button>
-                  <Button className="bg-gradient-to-r from-indigo-600 to-indigo-700">
+                  <Button onClick={handleSave} className="bg-gradient-to-r from-indigo-600 to-indigo-700">
                     <CheckCircle2 className="h-4 w-4 mr-2" />
                     Simpan
                   </Button>
@@ -131,18 +221,30 @@ export default function CutiPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2 md:col-span-1">
-                      <Label className="text-xs uppercase text-slate-400 font-semibold tracking-wide">Pilih Karyawan</Label>
-                      <Select
-                        value={formData.karyawanId}
-                        onChange={(e) => setFormData({ ...formData, karyawanId: e.target.value })}
-                      >
-                        <option value="">Pilih Karyawan</option>
-                        {mockKaryawan.map((k) => (
-                          <option key={k.id} value={k.id}>{k.nip} - {k.nama}</option>
-                        ))}
-                      </Select>
-                    </div>
+                    {isAdmin ? (
+                      <div className="space-y-2 md:col-span-1">
+                        <Label className="text-xs uppercase text-slate-400 font-semibold tracking-wide">Pilih Karyawan</Label>
+                        <Select
+                          value={formData.karyawanId}
+                          onChange={(e) => setFormData({ ...formData, karyawanId: e.target.value })}
+                        >
+                          <option value="">Pilih Karyawan</option>
+                          {mockKaryawan.map((k) => (
+                            <option key={k.id} value={k.id}>{k.nip} - {k.nama}</option>
+                          ))}
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 md:col-span-1">
+                        <Label className="text-xs uppercase text-slate-400 font-semibold tracking-wide">Nama Karyawan</Label>
+                        <Input
+                          type="text"
+                          value={`${employeeNip || '2201005'} - ${employeeName}`}
+                          disabled
+                          className="bg-slate-100 border-slate-200 text-slate-600 font-medium"
+                        />
+                      </div>
+                    )}
                     <div className="space-y-2 md:col-span-1">
                       <Label className="text-xs uppercase text-slate-400 font-semibold tracking-wide">Jenis Cuti</Label>
                       <Select
@@ -239,34 +341,36 @@ export default function CutiPage() {
         </Dialog>
       </div>
 
-      {/* Filters */}
-      <Card className="border-slate-200 bg-white">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Karyawan</Label>
-              <Select defaultValue="">
-                <option value="">Semua Karyawan</option>
-                {mockKaryawan.map((k) => (
-                  <option key={k.id} value={k.id}>{k.nama}</option>
-                ))}
-              </Select>
+      {/* Filters (Only for Admins) */}
+      {isAdmin && (
+        <Card className="border-slate-200 bg-white">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-1 space-y-2">
+                <Label className="text-sm font-medium text-slate-700">Karyawan</Label>
+                <Select defaultValue="">
+                  <option value="">Semua Karyawan</option>
+                  {mockKaryawan.map((k) => (
+                    <option key={k.id} value={k.id}>{k.nama}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label className="text-sm font-medium text-slate-700">Tanggal Mulai</Label>
+                <Input type="date" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label className="text-sm font-medium text-slate-700">Tanggal Akhir</Label>
+                <Input type="date" />
+              </div>
+              <Button>
+                <Search className="h-4 w-4 mr-2" />
+                Cari
+              </Button>
             </div>
-            <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Tanggal Mulai</Label>
-              <Input type="date" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Tanggal Akhir</Label>
-              <Input type="date" />
-            </div>
-            <Button>
-              <Search className="h-4 w-4 mr-2" />
-              Cari
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Table */}
       <Card className="border-slate-200 bg-white shadow-sm">
@@ -279,11 +383,11 @@ export default function CutiPage() {
                 <TableHead>Jenis Cuti</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockCuti.map((cuti) => (
+              {displayedCuti.map((cuti) => (
                 <TableRow key={cuti.id} className="border-slate-200 hover:bg-slate-50 transition-colors">
                   <TableCell className="font-mono">{cuti.nip}</TableCell>
                   <TableCell>
@@ -308,13 +412,15 @@ export default function CutiPage() {
                       {cuti.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon"><FileText className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon"><FileText className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

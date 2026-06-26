@@ -17,7 +17,7 @@ export default function EmployeeMenuPage() {
   const menuItems = [
     { id: 'absensi', title: 'ABSENSI', icon: Fingerprint, color: 'text-blue-500', href: '/dashboard/attendance' },
     { id: 'kartu-pegawai', title: 'KARTU PEGAWAI', icon: CreditCard, color: 'text-slate-500', href: '/dashboard/employee' },
-    { id: 'cuti-izin', title: 'CUTI & IZIN', icon: Wifi, color: 'text-blue-500', href: '/dashboard/employee' },
+    { id: 'cuti-izin', title: 'CUTI & IZIN', icon: Wifi, color: 'text-blue-500', href: '/dashboard/admin/cuti' },
     { id: 'dinas-luar', title: 'DINAS LUAR', icon: Briefcase, color: 'text-orange-500', href: '/dashboard/employee' },
     { id: 'lembur', title: 'LEMBUR', icon: Zap, color: 'text-yellow-500', href: '/dashboard/employee' },
     { id: 'change-password', title: 'CHANGE PASSWORD', icon: Lock, color: 'text-blue-500', href: '/dashboard/profile' },

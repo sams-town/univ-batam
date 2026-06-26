@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, User, Fingerprint, BookOpen } from 'lucide-react'
 
-type Role = 'mahasiswa' | 'dosen' | 'employee' | 'karyawan'
+type Role = 'mahasiswa' | 'dosen' | 'employee' | 'karyawan' | 'pegawai'
 
 interface DashboardBottomNavProps {
   role: Role
@@ -31,6 +31,11 @@ const navConfig: Record<string, { icon: typeof Home; label: string; href: string
     { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
     { icon: User, label: 'Profil', href: '/dashboard/profile' },
   ],
+  pegawai: [
+    { icon: Home, label: 'Home', href: '/dashboard/employee' },
+    { icon: BookOpen, label: 'Akademik', href: '/dashboard/attendance' },
+    { icon: User, label: 'Profil', href: '/dashboard/profile' },
+  ],
 }
 
 export default function DashboardBottomNav({ role, onFabClick }: DashboardBottomNavProps) {
@@ -42,9 +47,11 @@ export default function DashboardBottomNav({ role, onFabClick }: DashboardBottom
     router.push(href)
   }
 
+  const isEmployeeRole = role === 'karyawan' || role === 'pegawai' || role === 'employee'
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-50">
-      <div className="relative grid grid-cols-5 h-20 max-w-lg mx-auto items-center justify-items-center">
+      <div className="relative grid grid-cols-5 h-20 w-full max-w-lg mx-auto items-center justify-items-center px-4">
         {/* Slot 1: Home */}
         <button
           onClick={() => handleNav(items[0].href)}
@@ -91,7 +98,7 @@ export default function DashboardBottomNav({ role, onFabClick }: DashboardBottom
               if (onFabClick) {
                 onFabClick()
               } else {
-                router.push(`/dashboard/${role === 'karyawan' ? 'employee' : role === 'dosen' ? 'lecturer' : 'student'}`)
+                router.push(`/dashboard/${isEmployeeRole ? 'employee' : role === 'dosen' ? 'lecturer' : 'student'}`)
               }
             }}
             className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-xl border-4 border-white active:scale-95 transition-transform"
