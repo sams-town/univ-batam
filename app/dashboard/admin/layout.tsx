@@ -50,9 +50,9 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <Sidebar />
-      <main className="flex-1 bg-slate-50 min-h-screen">
+      <main className="flex-1 bg-slate-50 min-h-screen w-full">
         {children}
       </main>
     </div>

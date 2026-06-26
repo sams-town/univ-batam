@@ -28,7 +28,9 @@ import {
   Briefcase,
   Shield,
   FolderOpen,
-  TrendingUp
+  TrendingUp,
+  Menu,
+  X
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -461,6 +463,7 @@ export default function Sidebar() {
   const role = (typeof profile?.role === 'string' ? profile.role : profile?.role?.name) || ''
   const menuItems = getMenuItems(role)
   const [openMenus, setOpenMenus] = useState<Set<string>>(new Set())
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.roles.includes(role)) return false
@@ -544,6 +547,7 @@ export default function Sidebar() {
       <Link
         key={item.id}
         href={itemHref}
+        onClick={() => setIsMobileOpen(false)} // Close drawer on menu click
         className={[
           'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all',
           linkClass
@@ -556,25 +560,91 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="flex flex-col w-72 border-r bg-white min-h-screen shadow-sm">
-      <div className="p-6 border-b bg-white">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
+    <>
+      {/* Mobile Top Header Bar */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b bg-white sticky top-0 z-40 w-full shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
             <img 
               src="/logo-unbat.png" 
               alt="Universitas Batam Logo" 
-              className="h-9 w-9 object-contain rounded-lg" 
+              className="h-7 w-7 object-contain" 
             />
           </div>
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Universitas Batam</h2>
-            <p className="text-xs text-slate-500 font-medium">Sistem Informasi Manajemen</p>
+            <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">Universitas Batam</h2>
+            <p className="text-[10px] text-slate-500 font-medium">Sistem Informasi Manajemen</p>
           </div>
         </div>
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
       </div>
-      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto bg-white">
-        {filteredMenuItems.map(item => renderMenuItem(item))}
-      </nav>
-    </div>
+
+      {/* Mobile Sidebar Drawer Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsMobileOpen(false)}
+          />
+
+          {/* Drawer Content */}
+          <div className="relative flex flex-col w-72 max-w-xs bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out">
+            <div className="p-4 border-b bg-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
+                  <img 
+                    src="/logo-unbat.png" 
+                    alt="Universitas Batam Logo" 
+                    className="h-7 w-7 object-contain" 
+                  />
+                </div>
+                <div>
+                  <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">Universitas Batam</h2>
+                  <p className="text-[10px] text-slate-500 font-medium">Sistem Informasi Manajemen</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto bg-white">
+              {filteredMenuItems.map(item => renderMenuItem(item))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar (visible on md and up) */}
+      <div className="hidden md:flex flex-col w-72 border-r bg-white min-h-screen shadow-sm flex-shrink-0">
+        <div className="p-6 border-b bg-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
+              <img 
+                src="/logo-unbat.png" 
+                alt="Universitas Batam Logo" 
+                className="h-9 w-9 object-contain" 
+              />
+            </div>
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Universitas Batam</h2>
+              <p className="text-xs text-slate-500 font-medium">Sistem Informasi Manajemen</p>
+            </div>
+          </div>
+        </div>
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto bg-white">
+          {filteredMenuItems.map(item => renderMenuItem(item))}
+        </nav>
+      </div>
+    </>
   )
 }
