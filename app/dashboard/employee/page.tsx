@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { supabase } from '@/lib/supabase'
 
 // Quick access menu items
 const quickMenuItems = [
@@ -59,6 +60,87 @@ const quickMenuItems = [
 
 export default function EmployeeDashboardPage() {
   const { profile, user } = useAuth()
+
+  const [dataAvailability, setDataAvailability] = useState<{
+    'slip-gaji': boolean
+    'pengajuan-cuti': boolean
+    'laporan-kehadiran': boolean
+    'profil-akademik': boolean
+    'pengaturan-akun': boolean
+  }>({
+    'slip-gaji': false,
+    'pengajuan-cuti': false,
+    'laporan-kehadiran': false,
+    'profil-akademik': true,
+    'pengaturan-akun': true,
+  })
+
+  useEffect(() => {
+    const checkDataAvailability = async () => {
+      if (!profile || !user) return
+
+      let employeeId = null
+
+      // Get employee details
+      const { data: empData } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .maybeSingle()
+
+      if (empData) {
+        employeeId = empData.id
+      }
+
+      // 1. Check Slip Gaji
+      let hasPayroll = false
+      if (employeeId) {
+        const { data: payData } = await supabase
+          .from('payroll_generations')
+          .select('id')
+          .eq('employee_id', employeeId)
+          .limit(1)
+        if (payData && payData.length > 0) {
+          hasPayroll = true
+        }
+      }
+      
+      const userFullName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()
+      const dummySlipGaji = ['Siti Aminah', 'Budi Santoso']
+      const nameMatch = dummySlipGaji.some(name => 
+        name.toLowerCase() === userFullName.toLowerCase()
+      )
+      if (nameMatch) {
+        hasPayroll = true
+      }
+
+      // 2. Check Pengajuan Cuti (always true if registered as an employee)
+      const hasCuti = !!employeeId
+
+      // 3. Check Laporan Kehadiran
+      let hasAttendance = false
+      if (employeeId) {
+        const { data: attData } = await supabase
+          .from('employee_attendances')
+          .select('id')
+          .eq('employee_id', employeeId)
+          .limit(1)
+        if (attData && attData.length > 0) {
+          hasAttendance = true
+        }
+      }
+
+      setDataAvailability({
+        'slip-gaji': hasPayroll,
+        'pengajuan-cuti': hasCuti,
+        'laporan-kehadiran': hasAttendance,
+        'profil-akademik': true,
+        'pengaturan-akun': true,
+      })
+    }
+
+    checkDataAvailability()
+  }, [profile, user])
 
   // Attendance & Camera Modal state
   const [showCameraModal, setShowCameraModal] = useState(false)
@@ -305,18 +387,39 @@ export default function EmployeeDashboardPage() {
             <div className="grid grid-cols-3 gap-3">
               {quickMenuItems.map((item) => {
                 const IconComponent = item.icon
+                const isAvailable = dataAvailability[item.id as keyof typeof dataAvailability] !== false
+                
+                const handleClick = (e: React.MouseEvent) => {
+                  if (!isAvailable) {
+                    e.preventDefault()
+                    alert(`Tidak ada data ${item.label} yang tersedia untuk akun Anda.`)
+                  }
+                }
+
                 return (
                   <a
                     key={item.id}
-                    href={item.link}
-                    className="group flex flex-col items-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                    href={isAvailable ? item.link : '#'}
+                    onClick={handleClick}
+                    className={`group flex flex-col items-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100 transition-all ${
+                      isAvailable 
+                        ? 'hover:border-blue-200 hover:bg-blue-50 cursor-pointer' 
+                        : 'opacity-40 cursor-not-allowed select-none'
+                    }`}
                   >
-                    <div className={`w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform mb-2`}>
+                    <div className={`w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center shadow-md ${
+                      isAvailable ? 'group-hover:scale-105 transition-transform' : ''
+                    } mb-2`}>
                       <IconComponent className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
                     </div>
                     <span className="text-[11px] sm:text-xs font-semibold text-slate-700 text-center leading-tight">
                       {item.label}
                     </span>
+                    {!isAvailable && (
+                      <span className="text-[8px] text-rose-500 font-extrabold mt-1 tracking-wider uppercase">
+                        Tidak Ada Data
+                      </span>
+                    )}
                   </a>
                 )
               })}
