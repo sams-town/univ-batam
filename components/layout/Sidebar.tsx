@@ -302,6 +302,13 @@ const getMenuItems = (role: string): MenuItem[] => {
             icon: Award,
             roles: ['super_admin', 'admin_akademik']
           },
+          {
+            id: 'rekap-absensi-pegawai',
+            title: 'Rekap Absensi Pegawai',
+            href: '/dashboard/reports',
+            icon: Award,
+            roles: ['super_admin', 'admin_akademik']
+          },
         ]
       },
 

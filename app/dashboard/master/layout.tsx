@@ -15,8 +15,7 @@ const masterMenuItems = [
   { title: 'Semester', href: '/dashboard/master/semesters' },
   { title: 'Ruang Kelas', href: '/dashboard/master/classrooms' },
   { title: 'Mata Kuliah', href: '/dashboard/master/courses' },
-  { title: 'Dosen', href: '/dashboard/master/lecturers' },
-  { title: 'Mahasiswa', href: '/dashboard/master/students' }
+  { title: 'Dosen', href: '/dashboard/master/lecturers' }
 ]
 
 export default function MasterLayout({

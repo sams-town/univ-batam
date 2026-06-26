@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Download, BarChart3, Users, UserCheck } from 'lucide-react'
+import { FileText, Download, BarChart3, UserCheck, Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import ExcelJS from 'exceljs'
 
@@ -20,19 +20,19 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url)
   }
 
-  // Laporan Harian
-  const downloadDailyReport = async () => {
+  // Laporan Absensi Dosen Harian
+  const downloadDailyLecturerReport = async () => {
     try {
-      const { data } = await supabase.from('attendance').select('*, student:students(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
+      const { data } = await supabase.from('absensi_kelas').select('*, lecturer:lecturers(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
 
       const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Laporan Harian')
+      const worksheet = workbook.addWorksheet('Laporan Absensi Dosen Harian')
 
       // Headers
       worksheet.columns = [
         { header: 'Tanggal', key: 'date', width: 15 },
-        { header: 'NIM', key: 'nim', width: 15 },
-        { header: 'Nama Mahasiswa', key: 'name', width: 30 },
+        { header: 'NIP', key: 'nip', width: 15 },
+        { header: 'Nama Dosen', key: 'name', width: 30 },
         { header: 'Mata Kuliah', key: 'course', width: 25 },
         { header: 'Kelas', key: 'classroom', width: 20 },
         { header: 'Status', key: 'status', width: 15 },
@@ -44,7 +44,7 @@ export default function ReportsPage() {
         data.forEach((item: any) => {
           worksheet.addRow({
             date: item.date,
-            nim: item.student?.nim,
+            nip: item.lecturer?.nip,
             name: `${item.profile?.first_name} ${item.profile?.last_name}`,
             course: item.course?.name,
             classroom: item.classroom?.name,
@@ -54,26 +54,65 @@ export default function ReportsPage() {
         })
       }
 
-      await downloadExcel(workbook, `Laporan_Harian_${new Date().toISOString().split('T')[0]}.xlsx`)
+      await downloadExcel(workbook, `Laporan_Absensi_Dosen_Harian_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
-      console.error('Error downloading daily report:', error)
-      alert('Gagal mengunduh laporan harian!')
+      console.error('Error downloading daily lecturer report:', error)
+      alert('Gagal mengunduh laporan absensi dosen harian!')
     }
   }
 
-  // Laporan Mingguan
-  const downloadWeeklyReport = async () => {
+  // Laporan Absensi Pegawai Harian
+  const downloadDailyEmployeeReport = async () => {
     try {
-      const { data } = await supabase.from('attendance').select('*, student:students(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
+      const { data } = await supabase.from('attendance_employees').select('*, employee:employees(*), profile:profiles(*)').order('date', { ascending: false })
 
       const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Laporan Mingguan (Pivot)')
+      const worksheet = workbook.addWorksheet('Laporan Absensi Pegawai Harian')
 
       // Headers
       worksheet.columns = [
         { header: 'Tanggal', key: 'date', width: 15 },
-        { header: 'NIM', key: 'nim', width: 15 },
-        { header: 'Nama Mahasiswa', key: 'name', width: 30 },
+        { header: 'NIP', key: 'nip', width: 15 },
+        { header: 'Nama Pegawai', key: 'name', width: 30 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Jam Masuk', key: 'time_in', width: 15 },
+        { header: 'Jam Keluar', key: 'time_out', width: 15 },
+      ]
+
+      // Add data
+      if (data) {
+        data.forEach((item: any) => {
+          worksheet.addRow({
+            date: item.date,
+            nip: item.employee?.nip,
+            name: `${item.profile?.first_name} ${item.profile?.last_name}`,
+            status: item.status,
+            time_in: item.time_in,
+            time_out: item.time_out,
+          })
+        })
+      }
+
+      await downloadExcel(workbook, `Laporan_Absensi_Pegawai_Harian_${new Date().toISOString().split('T')[0]}.xlsx`)
+    } catch (error) {
+      console.error('Error downloading daily employee report:', error)
+      alert('Gagal mengunduh laporan absensi pegawai harian!')
+    }
+  }
+
+  // Laporan Absensi Dosen Mingguan
+  const downloadWeeklyLecturerReport = async () => {
+    try {
+      const { data } = await supabase.from('absensi_kelas').select('*, lecturer:lecturers(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Laporan Absensi Dosen Mingguan')
+
+      // Headers
+      worksheet.columns = [
+        { header: 'Tanggal', key: 'date', width: 15 },
+        { header: 'NIP', key: 'nip', width: 15 },
+        { header: 'Nama Dosen', key: 'name', width: 30 },
         { header: 'Mata Kuliah', key: 'course', width: 25 },
         { header: 'Status Kehadiran', key: 'status', width: 20 },
         { header: 'Total Kehadiran', key: 'total', width: 15 },
@@ -84,7 +123,7 @@ export default function ReportsPage() {
         data.forEach((item: any) => {
           worksheet.addRow({
             date: item.date,
-            nim: item.student?.nim,
+            nip: item.lecturer?.nip,
             name: `${item.profile?.first_name} ${item.profile?.last_name}`,
             course: item.course?.name,
             status: item.status,
@@ -93,26 +132,26 @@ export default function ReportsPage() {
         })
       }
 
-      await downloadExcel(workbook, `Laporan_Mingguan_${new Date().toISOString().split('T')[0]}.xlsx`)
+      await downloadExcel(workbook, `Laporan_Absensi_Dosen_Mingguan_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
-      console.error('Error downloading weekly report:', error)
-      alert('Gagal mengunduh laporan mingguan!')
+      console.error('Error downloading weekly lecturer report:', error)
+      alert('Gagal mengunduh laporan absensi dosen mingguan!')
     }
   }
 
-  // Laporan Bulanan
-  const downloadMonthlyReport = async () => {
+  // Laporan Absensi Dosen Bulanan
+  const downloadMonthlyLecturerReport = async () => {
     try {
-      const { data } = await supabase.from('attendance').select('*, student:students(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
+      const { data } = await supabase.from('absensi_kelas').select('*, lecturer:lecturers(*), profile:profiles(*), schedule:schedules(*), classroom:classrooms(*), course:courses(*)').order('date', { ascending: false })
 
       const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Laporan Bulanan (Pivot)')
+      const worksheet = workbook.addWorksheet('Laporan Absensi Dosen Bulanan')
 
       // Headers
       worksheet.columns = [
         { header: 'Bulan', key: 'month', width: 15 },
-        { header: 'NIM', key: 'nim', width: 15 },
-        { header: 'Nama Mahasiswa', key: 'name', width: 30 },
+        { header: 'NIP', key: 'nip', width: 15 },
+        { header: 'Nama Dosen', key: 'name', width: 30 },
         { header: 'Mata Kuliah', key: 'course', width: 25 },
         { header: 'Hadir', key: 'present', width: 10 },
         { header: 'Izin', key: 'permission', width: 10 },
@@ -126,7 +165,7 @@ export default function ReportsPage() {
           const month = new Date(item.date).toLocaleString('id-ID', { month: 'long', year: 'numeric' })
           worksheet.addRow({
             month,
-            nim: item.student?.nim,
+            nip: item.lecturer?.nip,
             name: `${item.profile?.first_name} ${item.profile?.last_name}`,
             course: item.course?.name,
             present: item.status === 'Hadir' ? 1 : 0,
@@ -137,27 +176,28 @@ export default function ReportsPage() {
         })
       }
 
-      await downloadExcel(workbook, `Laporan_Bulanan_${new Date().toISOString().split('T')[0]}.xlsx`)
+      await downloadExcel(workbook, `Laporan_Absensi_Dosen_Bulanan_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
-      console.error('Error downloading monthly report:', error)
-      alert('Gagal mengunduh laporan bulanan!')
+      console.error('Error downloading monthly lecturer report:', error)
+      alert('Gagal mengunduh laporan absensi dosen bulanan!')
     }
   }
 
-  // Laporan Mahasiswa
-  const downloadStudentReport = async () => {
+  // Laporan Dosen
+  const downloadLecturerReport = async () => {
     try {
-      const { data } = await supabase.from('students').select('*, program:programs(*), profile:profiles(*)').order('nim')
+      const { data } = await supabase.from('lecturers').select('*, program:programs(*), profile:profiles(*)').order('nip')
 
       const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Laporan Mahasiswa')
+      const worksheet = workbook.addWorksheet('Laporan Dosen')
 
       // Headers
       worksheet.columns = [
-        { header: 'NIM', key: 'nim', width: 15 },
+        { header: 'NIP', key: 'nip', width: 15 },
         { header: 'Nama Depan', key: 'first_name', width: 20 },
         { header: 'Nama Belakang', key: 'last_name', width: 20 },
         { header: 'Email', key: 'email', width: 30 },
+        { header: 'Jabatan', key: 'position', width: 30 },
         { header: 'Program Studi', key: 'program', width: 30 },
       ]
 
@@ -165,23 +205,24 @@ export default function ReportsPage() {
       if (data) {
         data.forEach((item: any) => {
           worksheet.addRow({
-            nim: item.nim,
+            nip: item.nip,
             first_name: item.profile?.first_name,
             last_name: item.profile?.last_name,
             email: item.profile?.email,
+            position: item.position,
             program: item.program?.name,
           })
         })
       }
 
-      await downloadExcel(workbook, `Laporan_Mahasiswa_${new Date().toISOString().split('T')[0]}.xlsx`)
+      await downloadExcel(workbook, `Laporan_Dosen_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
-      console.error('Error downloading student report:', error)
-      alert('Gagal mengunduh laporan mahasiswa!')
+      console.error('Error downloading lecturer report:', error)
+      alert('Gagal mengunduh laporan dosen!')
     }
   }
 
-  // Laporan Karyawan
+  // Laporan Pegawai
   const downloadEmployeeReport = async () => {
     try {
       // Try multiple possible table names
@@ -194,24 +235,18 @@ export default function ReportsPage() {
         data = employeesData
         tableName = 'employees'
       } else {
-        // Fallback to 'lecturers' or 'karyawan'
-        const { data: lecturersData } = await supabase.from('lecturers').select('*, profile:profiles(*)').order('id')
-        if (lecturersData) {
-          data = lecturersData
-          tableName = 'lecturers'
-        } else {
-          const { data: karyawanData } = await supabase.from('karyawan').select('*, profile:profiles(*)').order('id')
-          data = karyawanData
-          tableName = 'karyawan'
-        }
+        // Fallback to 'karyawan'
+        const { data: karyawanData } = await supabase.from('karyawan').select('*, profile:profiles(*)').order('id')
+        data = karyawanData
+        tableName = 'karyawan'
       }
 
       const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Laporan Karyawan')
+      const worksheet = workbook.addWorksheet('Laporan Pegawai')
 
       // Headers
       worksheet.columns = [
-        { header: 'ID', key: 'id', width: 15 },
+        { header: 'NIP', key: 'nip', width: 15 },
         { header: 'Nama Depan', key: 'first_name', width: 20 },
         { header: 'Nama Belakang', key: 'last_name', width: 20 },
         { header: 'Email', key: 'email', width: 30 },
@@ -222,19 +257,19 @@ export default function ReportsPage() {
       if (data) {
         data.forEach((item: any) => {
           worksheet.addRow({
-            id: item.id,
+            nip: item.nip,
             first_name: item.profile?.first_name,
             last_name: item.profile?.last_name,
             email: item.profile?.email,
-            position: item.position || item.nip || '-',
+            position: item.position || '-',
           })
         })
       }
 
-      await downloadExcel(workbook, `Laporan_Karyawan_${new Date().toISOString().split('T')[0]}.xlsx`)
+      await downloadExcel(workbook, `Laporan_Pegawai_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
       console.error('Error downloading employee report:', error)
-      alert('Gagal mengunduh laporan karyawan!')
+      alert('Gagal mengunduh laporan pegawai!')
     }
   }
 
@@ -245,19 +280,20 @@ export default function ReportsPage() {
         <p className="text-muted-foreground">Unduh laporan absensi dan rekap data (format Excel)</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Absensi Dosen */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <FileText className="h-6 w-6" />
-              Laporan Harian
+              Absensi Dosen Harian
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Laporan kehadiran per hari
+              Laporan absensi dosen per hari
             </p>
-            <Button className="w-full" onClick={downloadDailyReport}>
+            <Button className="w-full" onClick={downloadDailyLecturerReport}>
               <Download className="h-4 w-4 mr-2" />
               Unduh
             </Button>
@@ -268,14 +304,14 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <BarChart3 className="h-6 w-6" />
-              Laporan Mingguan
+              Absensi Dosen Mingguan
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Laporan kehadiran per minggu (pivot)
+              Laporan absensi dosen per minggu
             </p>
-            <Button className="w-full" onClick={downloadWeeklyReport}>
+            <Button className="w-full" onClick={downloadWeeklyLecturerReport}>
               <Download className="h-4 w-4 mr-2" />
               Unduh
             </Button>
@@ -286,48 +322,69 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <FileText className="h-6 w-6" />
-              Laporan Bulanan
+              Absensi Dosen Bulanan
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Laporan kehadiran per bulan (pivot)
+              Laporan absensi dosen per bulan
             </p>
-            <Button className="w-full" onClick={downloadMonthlyReport}>
+            <Button className="w-full" onClick={downloadMonthlyLecturerReport}>
               <Download className="h-4 w-4 mr-2" />
               Unduh
             </Button>
           </CardContent>
         </Card>
 
+        {/* Absensi Pegawai */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <Users className="h-6 w-6" />
-              Laporan Mahasiswa
+              <FileText className="h-6 w-6" />
+              Absensi Pegawai Harian
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Rekap kehadiran per mahasiswa
+              Laporan absensi pegawai per hari
             </p>
-            <Button className="w-full" onClick={downloadStudentReport}>
+            <Button className="w-full" onClick={downloadDailyEmployeeReport}>
               <Download className="h-4 w-4 mr-2" />
               Unduh
             </Button>
           </CardContent>
         </Card>
 
+        {/* Laporan Data Dosen */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <UserCheck className="h-6 w-6" />
-              Laporan Karyawan
+              Laporan Dosen
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Rekap data karyawan dan dosen
+              Rekap data dosen
+            </p>
+            <Button className="w-full" onClick={downloadLecturerReport}>
+              <Download className="h-4 w-4 mr-2" />
+              Unduh
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Laporan Data Pegawai */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <Users className="h-6 w-6" />
+              Laporan Pegawai
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Rekap data pegawai
             </p>
             <Button className="w-full" onClick={downloadEmployeeReport}>
               <Download className="h-4 w-4 mr-2" />
