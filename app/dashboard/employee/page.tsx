@@ -25,14 +25,14 @@ const quickMenuItems = [
     label: 'Slip Gaji',
     icon: CreditCard,
     color: 'from-blue-500 to-blue-600',
-    link: '/dashboard/payroll'
+    link: '/dashboard/admin/slip-gaji-karyawan'
   },
   {
     id: 'pengajuan-cuti',
     label: 'Pengajuan Cuti',
     icon: Calendar,
     color: 'from-emerald-500 to-emerald-600',
-    link: '/dashboard/attendance'
+    link: '/dashboard/admin/cuti'
   },
   {
     id: 'laporan-kehadiran',

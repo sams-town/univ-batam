@@ -25,7 +25,7 @@ const quickMenuItems = [
     label: 'Slip Gaji',
     icon: CreditCard,
     color: 'from-blue-500 to-blue-600',
-    link: '/dashboard/payroll'
+    link: '/dashboard/admin/slip-gaji-dosen'
   },
   {
     id: 'pengajuan-cuti',

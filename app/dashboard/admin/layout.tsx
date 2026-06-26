@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 
@@ -12,11 +12,26 @@ export default function AdminLayout({
 }) {
   const { profile, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [localStorageRole, setLocalStorageRole] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalStorageRole(localStorage.getItem("user_role"));
   }, []);
+
+  const isBypassedRoute = () => {
+    if (localStorageRole === 'employee' || localStorageRole === 'karyawan' || localStorageRole === 'pegawai') {
+      return (
+        pathname.startsWith('/dashboard/admin/slip-gaji-karyawan') ||
+        pathname.startsWith('/dashboard/admin/cuti') ||
+        pathname.startsWith('/dashboard/admin/shift')
+      )
+    }
+    if (localStorageRole === 'dosen' || localStorageRole === 'lecturer') {
+      return pathname.startsWith('/dashboard/admin/slip-gaji-dosen')
+    }
+    return false
+  }
 
   const isAdmin =
     localStorageRole === "admin" ||
@@ -28,7 +43,8 @@ export default function AdminLayout({
       (profile.role === "super_admin" || profile.role === "admin_akademik")) ||
     // fallback: if role is still a joined object (legacy)
     (profile?.role && typeof profile.role === 'object' &&
-      ((profile.role as any)?.name === "super_admin" || (profile.role as any)?.name === "admin_akademik"));
+      ((profile.role as any)?.name === "super_admin" || (profile.role as any)?.name === "admin_akademik")) ||
+    isBypassedRoute();
 
   const isVerified = !loading && isAdmin;
 
