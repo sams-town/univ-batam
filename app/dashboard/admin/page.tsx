@@ -6,10 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/useAuth'
 import { 
-  GraduationCap, 
   Users, 
   Briefcase, 
   Calendar, 
@@ -38,13 +36,13 @@ import {
 
 // Mock data for charts
 const attendanceTrendData = [
-  { day: 'Senin', mahasiswa: 85, dosen: 95 },
-  { day: 'Selasa', mahasiswa: 88, dosen: 92 },
-  { day: 'Rabu', mahasiswa: 90, dosen: 96 },
-  { day: 'Kamis', mahasiswa: 87, dosen: 94 },
-  { day: 'Jumat', mahasiswa: 82, dosen: 91 },
-  { day: 'Sabtu', mahasiswa: 78, dosen: 89 },
-  { day: 'Minggu', mahasiswa: 0, dosen: 0 },
+  { day: 'Senin', dosen: 95 },
+  { day: 'Selasa', dosen: 92 },
+  { day: 'Rabu', dosen: 96 },
+  { day: 'Kamis', dosen: 94 },
+  { day: 'Jumat', dosen: 91 },
+  { day: 'Sabtu', dosen: 89 },
+  { day: 'Minggu', dosen: 0 },
 ]
 
 const facultyEfficiencyData = [
@@ -52,13 +50,6 @@ const facultyEfficiencyData = [
   { faculty: 'Ekonomi', percentage: 88 },
   { faculty: 'Hukum', percentage: 85 },
   { faculty: 'Ilmu Komputer', percentage: 90 },
-]
-
-// Mock data for perizinan
-const studentRequests = [
-  { id: 1, name: 'Ahmad Rizky Pratama', reason: 'Sakit', date: '2026-06-19', status: 'pending' },
-  { id: 2, name: 'Siti Nurhaliza', reason: 'Izin Keluarga', date: '2026-06-19', status: 'pending' },
-  { id: 3, name: 'Budi Santoso', reason: 'Izin', date: '2026-06-18', status: 'approved' },
 ]
 
 const lecturerRequests = [
@@ -75,14 +66,12 @@ const calendarEvents = [
 
 // Mock data for birthdays
 const birthdays = [
-  { id: 1, name: 'Ahmad', role: 'Mahasiswa', date: '2026-06-19' },
   { id: 2, name: 'Siti', role: 'Dosen', date: '2026-06-20' },
   { id: 3, name: 'Budi', role: 'Karyawan', date: '2026-06-21' },
 ]
 
 export default function AdminDashboardPage() {
   const { profile } = useAuth()
-  const [activePerizinanTab, setActivePerizinanTab] = useState('mahasiswa')
   const [seedingStatus, setSeedingStatus] = useState<string>('')
   const [isSeeding, setIsSeeding] = useState(false)
   const [facultiesList, setFacultiesList] = useState<{ code: string; name: string }[]>([])
@@ -306,7 +295,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="bg-yellow-400/90 text-yellow-900 px-4 py-2 rounded-xl flex items-center gap-2">
               <BellRing className="h-5 w-5" />
-              <span className="font-semibold">3 Ulang Tahun Hari Ini</span>
+              <span className="font-semibold">{birthdays.length} Ulang Tahun Hari Ini</span>
             </div>
           </div>
         </div>
@@ -341,21 +330,8 @@ export default function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Row 1: Enhanced Academic Metrics (4 Columns) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border border-slate-100 bg-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-700">
-              <GraduationCap className="h-6 w-6 text-teal-600" />
-              Total Mahasiswa
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-extrabold text-slate-900 mb-2">1,245 Active</p>
-            <p className="text-sm text-slate-500">Reguler: 900 | Karyawan: 345</p>
-          </CardContent>
-        </Card>
-
+      {/* Row 1: Enhanced Academic Metrics (3 Columns) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border border-slate-100 bg-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-700">
@@ -398,46 +374,18 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Row 2: Financial Overview Cards (3 Columns) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border border-slate-100 bg-gradient-to-br from-cyan-500 to-blue-600 text-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
+      {/* Row 2: Financial Overview (Single Full-Width Card) */}
+      <div className="w-full">
+        <Card className="border border-slate-100 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <DollarSign className="h-6 w-6" />
-              Total UKT Semester Ini
-            </CardTitle>
-            <CardDescription className="text-cyan-100">Target Tercapai</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-extrabold">Rp 2.450.000.000</p>
-            <p className="text-sm text-cyan-100 mt-2">85% Target Tercapai</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-100 bg-gradient-to-br from-emerald-500 to-teal-600 text-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <DollarSign className="h-6 w-6" />
+              <DollarSign className="h-6 w-6 text-emerald-100" />
               Sirkulasi Dana Bulan Ini
             </CardTitle>
             <CardDescription className="text-emerald-100">Kas Masuk Bersih</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-extrabold">Rp 420.000.000</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-100 bg-gradient-to-br from-rose-500 to-red-600 text-white hover:shadow-xl transition-all duration-200 rounded-2xl shadow-md">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <XCircle className="h-6 w-6" />
-              Tunggakan & Belum Registrasi
-            </CardTitle>
-            <CardDescription className="text-rose-100">Mahasiswa Belum Bayar</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-extrabold">Rp 180.000.000</p>
-            <p className="text-sm text-rose-100 mt-2">42 Mahasiswa Belum Bayar</p>
           </CardContent>
         </Card>
       </div>
@@ -449,88 +397,44 @@ export default function AdminDashboardPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-700">
               <FileText className="h-6 w-6 text-blue-500" />
-              Perizinan & Approval Hub
+              Perizinan Dosen & Kelas Pengganti
             </CardTitle>
+            <CardDescription className="text-slate-500">
+              Persetujuan izin dosen dan permohonan kelas pengganti aktif
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <Tabs defaultValue="mahasiswa" value={activePerizinanTab} onValueChange={setActivePerizinanTab}>
-              <TabsList className="w-full max-w-md mb-6 bg-slate-100 p-1 rounded-xl">
-                <TabsTrigger value="mahasiswa" className="flex items-center gap-2 data-[state=active]:bg-white rounded-lg font-medium">
-                  Perizinan Mahasiswa
-                </TabsTrigger>
-                <TabsTrigger value="dosen" className="flex items-center gap-2 data-[state=active]:bg-white rounded-lg font-medium">
-                  Perizinan Dosen & Kelas Pengganti
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="mahasiswa" className="mt-0 space-y-4">
-                {studentRequests.map((req) => (
-                  <div key={req.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-teal-100 text-teal-700">
-                          {req.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-slate-800">{req.name}</p>
-                        <p className="text-xs text-slate-500">{req.reason} • {req.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {req.status === 'pending' ? (
-                        <>
-                          <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Setujui
-                          </Button>
-                          <Button variant="destructive" size="sm">
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Tolak
-                          </Button>
-                        </>
-                      ) : (
-                        <Badge className="bg-emerald-500 text-white">Disetujui</Badge>
-                      )}
-                    </div>
+          <CardContent className="p-6 pt-0 space-y-4">
+            {lecturerRequests.map((req) => (
+              <div key={req.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-blue-100 text-blue-700">
+                      {req.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-slate-800">{req.name}</p>
+                    <p className="text-xs text-slate-500">{req.reason} • {req.date}</p>
                   </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="dosen" className="mt-0 space-y-4">
-                {lecturerRequests.map((req) => (
-                  <div key={req.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-blue-100 text-blue-700">
-                          {req.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-slate-800">{req.name}</p>
-                        <p className="text-xs text-slate-500">{req.reason} • {req.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {req.status === 'pending' ? (
-                        <>
-                          <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Setujui
-                          </Button>
-                          <Button variant="destructive" size="sm">
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Tolak
-                          </Button>
-                        </>
-                      ) : (
-                        <Badge className="bg-emerald-500 text-white">Disetujui</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </TabsContent>
-            </Tabs>
+                </div>
+                <div className="flex gap-2">
+                  {req.status === 'pending' ? (
+                    <>
+                      <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        Setujui
+                      </Button>
+                      <Button variant="destructive" size="sm">
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Tolak
+                      </Button>
+                    </>
+                  ) : (
+                    <Badge className="bg-emerald-500 text-white">Disetujui</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
@@ -595,9 +499,9 @@ export default function AdminDashboardPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-700">
               <Clock className="h-6 w-6 text-teal-500" />
-              Trend Kehadiran 7 Hari Terakhir
+              Trend Kehadiran Dosen 7 Hari Terakhir
             </CardTitle>
-            <CardDescription className="text-slate-500">Perbandingan kehadiran mahasiswa vs dosen</CardDescription>
+            <CardDescription className="text-slate-500">Rata-rata persentase kehadiran dosen harian</CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0">
             <div className="h-80 min-w-0 min-h-[320px]">
@@ -611,7 +515,6 @@ export default function AdminDashboardPage() {
                   <YAxis stroke="#64748b" />
                   <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} />
                   <Legend />
-                  <Line type="monotone" dataKey="mahasiswa" stroke="#14b8a6" strokeWidth={3} activeDot={{ r: 8 }} />
                   <Line type="monotone" dataKey="dosen" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 8 }} />
                 </LineChart>
               </ResponsiveContainer>
