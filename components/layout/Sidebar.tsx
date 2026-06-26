@@ -106,7 +106,7 @@ const menuItems: MenuItem[] = [
     title: 'Manajemen SDM',
     href: '#',
     icon: UserCog,
-    roles: ['super_admin', 'admin_akademik'],
+    roles: ['super_admin', 'admin_akademik', 'dosen'],
     children: [
       {
         id: 'data-dosen',
@@ -114,6 +114,27 @@ const menuItems: MenuItem[] = [
         href: '/dashboard/master/lecturers',
         icon: IdCard,
         roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'payroll-dosen',
+        title: 'Payroll Dosen',
+        href: '/dashboard/admin/payroll-dosen',
+        icon: WalletCards,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'master-tarif-dosen',
+        title: 'Master Tarif Mengajar',
+        href: '/dashboard/admin/tarif-dosen',
+        icon: Settings,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'slip-gaji-dosen',
+        title: 'Slip Gaji Dosen',
+        href: '/dashboard/admin/slip-gaji-dosen',
+        icon: FileText,
+        roles: ['super_admin', 'admin_akademik', 'dosen']
       },
       {
         id: 'data-karyawan',

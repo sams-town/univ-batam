@@ -76,3 +76,50 @@ export interface PaymentItem {
   name?: string
   amount?: number
 }
+
+export interface TarifDosen {
+  id: string
+  dosen_id: string
+  status_dosen: string
+  tarif_daring: number
+  tarif_luring: number
+  gaji_pokok: number
+  tunjangan: number
+  is_active: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  dosen?: Lecturer & { profile?: Profile }
+}
+
+export interface PayrollDosen {
+  id: string
+  periode: string
+  dosen_id: string
+  gaji_pokok: number
+  insentif_daring: number
+  insentif_luring: number
+  tunjangan: number
+  potongan: number
+  total_gaji: number
+  status: 'Draft' | 'Locked' | 'Cancelled'
+  created_at?: Date | string
+  updated_at?: Date | string
+  dosen?: Lecturer & { 
+    profile?: Profile
+    department?: Department & { faculty?: Faculty } 
+  }
+}
+
+export interface PayrollDosenDetail {
+  id: string
+  payroll_id: string
+  session_id: string
+  jadwal_id: string
+  pertemuan: number
+  mode: 'daring' | 'luring'
+  sks: number
+  tarif: number
+  jumlah: number
+  created_at?: Date | string
+}
+
