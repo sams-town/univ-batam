@@ -161,6 +161,11 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     }
   }, [profile])
 
+  // Sync activeTab when defaultTab prop changes from parent routing
+  useEffect(() => {
+    setActiveTab(defaultTab)
+  }, [defaultTab])
+
   // Load Main Students List
   const loadStudents = async () => {
     setLoading(true)
@@ -191,6 +196,9 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
           .order('nim')
         if (error) throw error
         dataList = data || []
+        if (dataList.length === 0) {
+          throw new Error("No student records found in database")
+        }
       } catch (err: any) {
         console.warn("Using localStorage fallback for students list:", err.message)
         const local = localStorage.getItem('local_students')
@@ -250,7 +258,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Status History
     try {
       const { data } = await supabase.from('status_akademik_history').select('*').eq('student_id', studentId).order('created_at', { ascending: false })
-      setStatusHistory(data || [])
+      if (!data || data.length === 0) throw new Error("Empty status history")
+      setStatusHistory(data)
     } catch {
       const local = localStorage.getItem(`local_status_history_${studentId}`)
       setStatusHistory(local ? JSON.parse(local) : [
@@ -265,7 +274,7 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
         .select('*, krs:krs!inner(student_id, semester_id, status_persetujuan), course:courses(*)')
         .eq('krs.student_id', studentId)
       
-      if (data) {
+      if (data && data.length > 0) {
         setKrsItems(data.map((item: any) => ({
           id: item.id,
           course_id: item.course_id,
@@ -274,6 +283,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
           credits: item.course?.credits,
           status: item.krs?.status_persetujuan
         })))
+      } else {
+        throw new Error("Empty KRS items")
       }
     } catch {
       const local = localStorage.getItem(`local_krs_${studentId}`)
@@ -287,7 +298,7 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // KHS / Grades
     try {
       const { data } = await supabase.from('nilai_mahasiswa').select('*, course:courses(*)').eq('student_id', studentId)
-      if (data) {
+      if (data && data.length > 0) {
         setNilaiList(data.map((n: any) => ({
           id: n.id,
           semester: 1, // mock
@@ -298,6 +309,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
           nilai_huruf: n.nilai_huruf,
           bobot: n.bobot
         })))
+      } else {
+        throw new Error("Empty grades")
       }
     } catch {
       const local = localStorage.getItem(`local_grades_${studentId}`)
@@ -311,7 +324,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Violations
     try {
       const { data } = await supabase.from('pelanggaran_mahasiswa').select('*').eq('student_id', studentId).order('created_at', { ascending: false })
-      setViolationsList(data || [])
+      if (!data || data.length === 0) throw new Error("Empty violations")
+      setViolationsList(data)
     } catch {
       const local = localStorage.getItem(`local_violations_${studentId}`)
       setViolationsList(local ? JSON.parse(local) : [
@@ -322,7 +336,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Permits
     try {
       const { data } = await supabase.from('perizinan_absensi').select('*').eq('student_id', studentId).order('created_at', { ascending: false })
-      setPermitsList(data || [])
+      if (!data || data.length === 0) throw new Error("Empty permits")
+      setPermitsList(data)
     } catch {
       const local = localStorage.getItem(`local_permits_${studentId}`)
       setPermitsList(local ? JSON.parse(local) : [
@@ -333,7 +348,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Scholarships
     try {
       const { data } = await supabase.from('beasiswa_mahasiswa').select('*').eq('student_id', studentId)
-      setBeasiswaList(data || [])
+      if (!data || data.length === 0) throw new Error("Empty scholarships")
+      setBeasiswaList(data)
     } catch {
       const local = localStorage.getItem(`local_scholarships_${studentId}`)
       setBeasiswaList(local ? JSON.parse(local) : [
@@ -344,7 +360,8 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Achievements
     try {
       const { data } = await supabase.from('prestasi_mahasiswa').select('*').eq('student_id', studentId)
-      setPrestasiList(data || [])
+      if (!data || data.length === 0) throw new Error("Empty achievements")
+      setPrestasiList(data)
     } catch {
       const local = localStorage.getItem(`local_achievements_${studentId}`)
       setPrestasiList(local ? JSON.parse(local) : [
@@ -355,6 +372,7 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // PKL / Magang
     try {
       const { data } = await supabase.from('pkl_magang').select('*, pembimbing:lecturers(profile:profiles(first_name, last_name))').eq('student_id', studentId).maybeSingle()
+      if (!data) throw new Error("Empty PKL data")
       setPklData(data)
     } catch {
       const local = localStorage.getItem(`local_pkl_${studentId}`)
@@ -370,6 +388,7 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Skripsi / Tugas Akhir
     try {
       const { data } = await supabase.from('skripsi_ta').select('*').eq('student_id', studentId).maybeSingle()
+      if (!data) throw new Error("Empty Skripsi data")
       setSkripsiData(data)
     } catch {
       const local = localStorage.getItem(`local_skripsi_${studentId}`)
@@ -388,6 +407,7 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
     // Alumni
     try {
       const { data } = await supabase.from('alumni').select('*').eq('student_id', studentId).maybeSingle()
+      if (!data) throw new Error("Empty Alumni data")
       setAlumniData(data)
     } catch {
       const local = localStorage.getItem(`local_alumni_${studentId}`)
@@ -734,36 +754,10 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
         </div>
       )}
 
-      {/* Main Grid View */}
-      <div className="flex flex-col lg:flex-row gap-6 print:block">
-        
-        {/* Sidebar Tabs Selectors (Vertical layout on desktop) */}
-        <div className="w-full lg:w-64 flex-shrink-0 bg-white border border-slate-200 rounded-xl p-3 shadow-sm space-y-1 print:hidden">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">MENU UTAMA</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-1 gap-1">
-            {tabsList.map(tab => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left ${
-                    isActive 
-                      ? 'bg-blue-900 text-white shadow-sm font-bold' 
-                      : 'text-slate-650 hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
+      {/* Main Content View */}
+      <div className="print:block">
         {/* Workspace Display Area */}
-        <div className="flex-1 min-w-0 print:block">
+        <div className="min-w-0 print:block">
           
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
