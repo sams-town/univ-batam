@@ -239,25 +239,35 @@ export default function LoginPage() {
     setSuccessMessage('')
 
     try {
+      // STEP 1: Sign in
+      console.log('[LOGIN] Step 1: signInWithPassword', email)
       const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (signInError) throw signInError
+      if (signInError) {
+        console.error('[LOGIN] Step 1 FAILED:', signInError)
+        throw signInError
+      }
       if (!session) throw new Error('Gagal mendapatkan session')
+      console.log('[LOGIN] Step 1 OK. user.id:', session.user.id)
 
-      // Get user's profile and role
+      // STEP 2: Get user's profile and role
+      console.log('[LOGIN] Step 2: query profiles...')
       let { data: profile, error: profileError } = await supabase
-  .from('profiles')
-  .select('*, role')
-  .eq('id', session.user.id)
-  .maybeSingle()
+        .from('profiles')
+        .select('*, role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      console.log('[LOGIN] Step 2 result:', { profile, profileError })
 
       // Auto-heal admin profile/role if missing
       const isAdminEmailOrId = session.user.id === 'b6b9d09e-2094-4459-884e-7b0a0caad7b3' || email.toLowerCase().includes('admin')
 
       if (isAdminEmailOrId && (!profile || !profile.role)) {
+        console.log('[LOGIN] Step 2: auto-healing admin profile...')
         // Fetch super_admin role
         const { data: roleData } = await supabase
           .from('roles')
@@ -299,10 +309,15 @@ export default function LoginPage() {
         }
       }
 
-      if (profileError) throw profileError
+      if (profileError) {
+        console.error('[LOGIN] Step 2 profileError:', profileError)
+        throw new Error(`Profile error: ${profileError.message} (code: ${profileError.code})`)
+      }
       if (!profile) throw new Error('Profil tidak ditemukan. Hubungi administrator.')
 
-      // Fetch active academic year and semester to store in local session state
+      console.log('[LOGIN] Step 2 OK. profile.role:', profile.role, 'typeof:', typeof profile.role)
+
+      // STEP 3: Fetch active academic year and semester
       const { data: activeYear } = await supabase
         .from('academic_years')
         .select('*')
@@ -322,9 +337,9 @@ export default function LoginPage() {
         localStorage.setItem('active_semester', JSON.stringify(activeSem))
       }
 
-      // Redirect based on role
-      // profile.role is a VARCHAR string (from migration 007), not a joined object
+      // STEP 4: Redirect based on role
       const role = (typeof profile?.role === 'string' ? profile.role : (profile?.role as any)?.name) || 'mahasiswa'
+      console.log('[LOGIN] Step 4: Final role =', role, '→ redirecting...')
       
       // Simpan role di localStorage untuk navigasi sidebar dan routing aman
       localStorage.setItem('user_role', role)
@@ -333,6 +348,7 @@ export default function LoginPage() {
         case 'super_admin':
         case 'admin':
         case 'admin_akademik':
+          console.log('[LOGIN] Redirecting to /dashboard/admin')
           router.push('/dashboard/admin')
           break
         case 'dosen':
@@ -349,10 +365,11 @@ export default function LoginPage() {
           break
       }
     } catch (err: unknown) {
+      console.error('[LOGIN] CATCH ERROR:', err)
       const message = (err && typeof err === 'object' && 'message' in err) 
         ? String((err as { message: string }).message) 
         : String(err)
-      setError(message)
+      setError('ERROR: ' + message)
     } finally {
       setLoading(false)
     }
