@@ -1,8 +1,36 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+// Robust function to extract error message strings
+function extractErrorMessage(err: any): string {
+  if (!err) return 'Unknown error'
+  if (typeof err === 'string') return err
+  if (err.message && typeof err.message === 'string') return err.message
+  if (err.error_description && typeof err.error_description === 'string') return err.error_description
+  if (err.msg && typeof err.msg === 'string') return err.msg
+  try {
+    const stringified = JSON.stringify(err)
+    if (stringified !== '{}') return stringified
+  } catch (e) {}
+  return String(err)
+}
+
 export async function POST(req: Request) {
   try {
+    // 3. MISSING KEY CHECK: Check before calling any Supabase API
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+    if (!serviceRoleKey) {
+      return NextResponse.json({ 
+        error: 'System Error: Missing SUPABASE_SERVICE_ROLE_KEY in environment variables.' 
+      }, { status: 500 })
+    }
+
+    if (!supabaseUrl) {
+      return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL environment variable is missing on server' }, { status: 500 })
+    }
+
     const body = await req.json()
     const { 
       email, 
@@ -23,20 +51,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email, password, and roleName are required' }, { status: 400 })
     }
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-
-    if (!supabaseUrl) {
-      return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL environment variable is missing on server' }, { status: 500 })
-    }
-
-    if (!serviceRoleKey) {
-      return NextResponse.json({ 
-        error: 'SUPABASE_SERVICE_ROLE_KEY is missing on the server environment. Please configure it in .env.local.' 
-      }, { status: 500 })
-    }
-
-    // Initialize Supabase client with SERVICE_ROLE_KEY (bypassing RLS)
+    // 2. Initialize Supabase client strictly using process.env.SUPABASE_SERVICE_ROLE_KEY
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
@@ -57,7 +72,7 @@ export async function POST(req: Request) {
     })
 
     if (createError) {
-      return NextResponse.json({ error: `Auth user creation failed: ${createError.message}` }, { status: 400 })
+      return NextResponse.json({ error: `Auth user creation failed: ${extractErrorMessage(createError)}` }, { status: 400 })
     }
 
     const userId = userData.user.id
@@ -72,7 +87,7 @@ export async function POST(req: Request) {
     if (roleError) {
       // Rollback: delete auth user
       await supabaseAdmin.auth.admin.deleteUser(userId)
-      return NextResponse.json({ error: `Failed to fetch role: ${roleError.message}` }, { status: 400 })
+      return NextResponse.json({ error: `Failed to fetch role: ${extractErrorMessage(roleError)}` }, { status: 400 })
     }
 
     if (!roleData) {
@@ -102,7 +117,7 @@ export async function POST(req: Request) {
     if (profileError) {
       // Rollback: delete auth user
       await supabaseAdmin.auth.admin.deleteUser(userId)
-      return NextResponse.json({ error: `Failed to insert profile record: ${profileError.message}` }, { status: 400 })
+      return NextResponse.json({ error: `Failed to insert profile record: ${extractErrorMessage(profileError)}` }, { status: 400 })
     }
 
     // 4. Create role-specific record (employees or lecturers)
@@ -119,7 +134,7 @@ export async function POST(req: Request) {
         // Rollback: delete profile & delete auth user
         await supabaseAdmin.from('profiles').delete().eq('id', userId)
         await supabaseAdmin.auth.admin.deleteUser(userId)
-        return NextResponse.json({ error: `Failed to insert employee record: ${employeeError.message}` }, { status: 400 })
+        return NextResponse.json({ error: `Failed to insert employee record: ${extractErrorMessage(employeeError)}` }, { status: 400 })
       }
     } else if (roleName === 'dosen') {
       const { error: lecturerError } = await supabaseAdmin
@@ -134,13 +149,13 @@ export async function POST(req: Request) {
         // Rollback: delete profile & delete auth user
         await supabaseAdmin.from('profiles').delete().eq('id', userId)
         await supabaseAdmin.auth.admin.deleteUser(userId)
-        return NextResponse.json({ error: `Failed to insert lecturer record: ${lecturerError.message}` }, { status: 400 })
+        return NextResponse.json({ error: `Failed to insert lecturer record: ${extractErrorMessage(lecturerError)}` }, { status: 400 })
       }
     }
 
     return NextResponse.json({ success: true, userId })
   } catch (err: any) {
     console.error('Unhandled admin create-user error:', err)
-    return NextResponse.json({ error: `Internal Server Error: ${err.message}` }, { status: 500 })
+    return NextResponse.json({ error: `Internal Server Error: ${extractErrorMessage(err)}` }, { status: 500 })
   }
 }
