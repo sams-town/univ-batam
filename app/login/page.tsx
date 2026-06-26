@@ -257,7 +257,7 @@ export default function LoginPage() {
       console.log('[LOGIN] Step 2: query profiles...')
       let { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, address_ktp, address_domicile, gender, place_of_birth, date_of_birth')
+        .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, created_at, updated_at')
         .eq('id', session.user.id)
         .maybeSingle()
 
@@ -298,7 +298,7 @@ export default function LoginPage() {
           // Fetch updated profile
           const { data: updatedProfile } = await supabase
             .from('profiles')
-            .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, address_ktp, address_domicile, gender, place_of_birth, date_of_birth')
+            .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, created_at, updated_at')
             .eq('id', session.user.id)
             .maybeSingle()
 
