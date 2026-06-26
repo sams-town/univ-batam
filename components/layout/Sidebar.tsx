@@ -480,6 +480,10 @@ export default function Sidebar() {
       })
       if (filteredChildren.length === 0) return null
       
+      let plClass = 'pl-4'
+      if (depth === 1) plClass = 'pl-8'
+      if (depth === 2) plClass = 'pl-12'
+      
       return (
         <div key={item.id} className="space-y-1">
           <div className="flex items-center gap-3 px-4 py-2 rounded-lg transition-colors cursor-pointer hover:bg-muted">
@@ -487,7 +491,7 @@ export default function Sidebar() {
             <span>{item.title}</span>
             <ChevronRight className="h-4 w-4 ml-auto opacity-70" />
           </div>
-          <div className={`pl-${4 + depth * 4} space-y-1">
+          <div className={plClass + " space-y-1"}>
             {filteredChildren.map(child => renderMenuItem(child, depth + 1))}
           </div>
         </div>
@@ -495,15 +499,15 @@ export default function Sidebar() {
     }
     
     // Regular item
+    const linkClass = isActive 
+      ? 'bg-primary text-primary-foreground' 
+      : 'hover:bg-muted'
+      
     return (
       <Link
         key={item.id}
         href={itemHref}
-        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-          isActive 
-            ? 'bg-primary text-primary-foreground' 
-            : 'hover:bg-muted'
-        }`}
+        className={['flex items-center gap-3 px-4 py-2 rounded-lg transition-colors', linkClass].join(' ')}
       >
         <Icon className="h-4 w-4" />
         <span className="text-sm">{item.title}</span>
