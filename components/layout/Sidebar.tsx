@@ -52,10 +52,10 @@ const getMenuItems = (role: string): MenuItem[] => {
         roles: ['super_admin', 'admin_akademik']
       },
       
-      // Akademik & KBM
+      // Akademik
       {
         id: 'akademik-kbm',
-        title: 'Akademik & KBM',
+        title: 'Akademik',
         href: '#',
         icon: BookOpen,
         roles: ['super_admin', 'admin_akademik'],
@@ -69,14 +69,14 @@ const getMenuItems = (role: string): MenuItem[] => {
           },
           {
             id: 'ruang-kelas',
-            title: 'Ruang & Kelas',
+            title: 'Ruang Kelas',
             href: '/dashboard/master/classrooms',
             icon: DoorOpen,
             roles: ['super_admin', 'admin_akademik']
           },
           {
             id: 'kurikulum-mk',
-            title: 'Kurikulum & Mata Kuliah',
+            title: 'Kurikulum',
             href: '/dashboard/master/courses',
             icon: Book,
             roles: ['super_admin', 'admin_akademik']
@@ -84,15 +84,14 @@ const getMenuItems = (role: string): MenuItem[] => {
         ]
       },
 
-      // Manajemen SDM (Restructured)
+      // Sumber Daya Manusia
       {
         id: 'manajemen-sdm',
-        title: 'Manajemen SDM',
+        title: 'Sumber Daya Manusia',
         href: '#',
         icon: UserCog,
         roles: ['super_admin', 'admin_akademik'],
         children: [
-          // Data Kepegawaian sub-group
           {
             id: 'data-kepegawaian',
             title: 'Data Kepegawaian',
@@ -123,17 +122,16 @@ const getMenuItems = (role: string): MenuItem[] => {
               },
               {
                 id: 'pegawai-keluar',
-                title: 'Pegawai Keluar',
+                title: 'Resignasi',
                 href: '/dashboard/admin/resignation',
                 icon: UserMinus,
                 roles: ['super_admin', 'admin_akademik']
               },
             ]
           },
-          // Kehadiran & Jadwal sub-group
           {
             id: 'kehadiran-jadwal',
-            title: 'Kehadiran & Jadwal',
+            title: 'Kehadiran',
             href: '#',
             icon: Clock,
             roles: ['super_admin', 'admin_akademik'],
@@ -154,24 +152,23 @@ const getMenuItems = (role: string): MenuItem[] => {
               },
             ]
           },
-          // Kompensasi & Payroll sub-group
           {
             id: 'kompensasi-payroll',
-            title: 'Kompensasi & Payroll',
+            title: 'Penggajian',
             href: '#',
             icon: WalletCards,
             roles: ['super_admin', 'admin_akademik'],
             children: [
               {
                 id: 'master-tarif-dosen',
-                title: 'Master Tarif Mengajar',
+                title: 'Tarif Mengajar',
                 href: '/dashboard/admin/tarif-dosen',
                 icon: Settings,
                 roles: ['super_admin', 'admin_akademik']
               },
               {
                 id: 'proses-payroll',
-                title: 'Proses Payroll/Gaji',
+                title: 'Proses Payroll',
                 href: '/dashboard/admin/payroll',
                 icon: WalletCards,
                 roles: ['super_admin', 'admin_akademik']
@@ -193,7 +190,7 @@ const getMenuItems = (role: string): MenuItem[] => {
               {
                 id: 'slip-gaji-karyawan',
                 title: 'Slip Gaji Karyawan',
-                href: '/dashboard/admin/slip-gaji-karyawan', // Placeholder, create page if needed
+                href: '/dashboard/admin/slip-gaji-karyawan',
                 icon: FileText,
                 roles: ['super_admin', 'admin_akademik']
               },
@@ -202,17 +199,17 @@ const getMenuItems = (role: string): MenuItem[] => {
         ]
       },
 
-      // Visit & Kinerja Pegawai dan Dosen
+      // Kinerja & Kunjungan
       {
         id: 'visit-kinerja',
-        title: 'Visit & Kinerja',
+        title: 'Kinerja & Kunjungan',
         href: '#',
         icon: Clock,
         roles: ['super_admin', 'admin_akademik'],
         children: [
           {
             id: 'patroli-security',
-            title: 'Patroli Petugas Security',
+            title: 'Patroli Security',
             href: '/dashboard/admin/visit-kinerja/patroli-security',
             icon: Shield,
             roles: ['super_admin', 'admin_akademik']
@@ -269,10 +266,10 @@ const getMenuItems = (role: string): MenuItem[] => {
         ]
       },
 
-      // Keuangan Kampus (Cleaned: No UKT/SKS)
+      // Keuangan
       {
         id: 'keuangan-kampus',
-        title: 'Keuangan Kampus',
+        title: 'Keuangan',
         href: '#',
         icon: DollarSign,
         roles: ['super_admin', 'admin_akademik'],
@@ -287,10 +284,10 @@ const getMenuItems = (role: string): MenuItem[] => {
         ]
       },
 
-      // Laporan & Rekap (Cleaned: No Mahasiswa)
+      // Laporan
       {
         id: 'laporan-rekap',
-        title: 'Laporan & Rekap',
+        title: 'Laporan',
         href: '#',
         icon: BarChart3,
         roles: ['super_admin', 'admin_akademik'],
@@ -315,7 +312,7 @@ const getMenuItems = (role: string): MenuItem[] => {
       // Pengaturan Sistem
       {
         id: 'pengaturan-sistem',
-        title: 'Pengaturan Sistem',
+        title: 'Pengaturan',
         href: '#',
         icon: Settings,
         roles: ['super_admin', 'admin_akademik'],
@@ -490,7 +487,7 @@ export default function Sidebar() {
             <span>{item.title}</span>
             <ChevronRight className="h-4 w-4 ml-auto opacity-70" />
           </div>
-          <div className={`pl-${4 + depth * 4} space-y-1`}>
+          <div className={`pl-${4 + depth * 4} space-y-1">
             {filteredChildren.map(child => renderMenuItem(child, depth + 1))}
           </div>
         </div>
