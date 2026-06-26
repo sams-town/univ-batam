@@ -263,16 +263,24 @@ export default function LoginPage() {
 
       console.log('[LOGIN] Step 2 result:', { profile, profileError })
 
-      // Auto-heal admin profile/role if missing
-      const isAdminEmailOrId = session.user.id === 'b6b9d09e-2094-4459-884e-7b0a0caad7b3' || email.toLowerCase().includes('admin')
+      // Auto-heal ANY profile/role if missing
+      if (!profile || !profile.role) {
+        console.log('[LOGIN] Step 2: auto-healing profile...')
+        // Determine role based on email or default to 'mahasiswa'
+        let roleName = 'mahasiswa'
+        if (session.user.id === 'b6b9d09e-2094-4459-884e-7b0a0caad7b3' || email.toLowerCase().includes('admin')) {
+          roleName = 'super_admin'
+        } else if (email.toLowerCase().includes('dosen') || email.toLowerCase().includes('lecturer')) {
+          roleName = 'dosen'
+        } else if (email.toLowerCase().includes('karyawan') || email.toLowerCase().includes('pegawai') || email.toLowerCase().includes('employee')) {
+          roleName = 'karyawan'
+        }
 
-      if (isAdminEmailOrId && (!profile || !profile.role)) {
-        console.log('[LOGIN] Step 2: auto-healing admin profile...')
-        // Fetch super_admin role
+        // Fetch role from roles table
         const { data: roleData } = await supabase
           .from('roles')
           .select('id, name')
-          .eq('name', 'super_admin')
+          .eq('name', roleName)
           .maybeSingle()
 
         if (roleData) {
@@ -289,8 +297,8 @@ export default function LoginPage() {
               .insert({
                 id: session.user.id,
                 role_id: roleData.id,
-                first_name: 'Super',
-                last_name: 'Admin',
+                first_name: session.user.email?.split('@')[0] || 'User',
+                last_name: '',
                 email: session.user.email || email
               })
           }

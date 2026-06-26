@@ -132,11 +132,6 @@ export default function RegisterPage() {
           last_name: lastName,
           email,
           phone,
-          gender,
-          place_of_birth: placeOfBirth,
-          date_of_birth: dateOfBirth,
-          address_ktp: addressKtp,
-          address_domicile: addressDomicile,
         })
       
       if (profileError) throw profileError
