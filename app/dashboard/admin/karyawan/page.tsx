@@ -239,7 +239,7 @@ export default function KaryawanManagementPage() {
         faceRegistered: false
       }))
 
-      setKaryawans(formattedData)
+      setKaryawans([...formattedData, ...mockKaryawan])
     } catch (err) {
       console.error('Error loading karyawan:', err)
     }
