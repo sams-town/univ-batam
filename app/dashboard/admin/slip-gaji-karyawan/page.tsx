@@ -34,7 +34,7 @@ export default function SlipGajiKaryawanPage() {
   const { profile } = useAuth()
   
   // Determine if the logged-in user is an admin
-  const userRole = (typeof profile?.role === 'object' ? profile.role.name : profile?.role || '').toLowerCase()
+  const userRole = (profile?.role ? (typeof profile.role === 'object' ? profile.role.name || '' : profile.role) : '').toLowerCase()
   const isLocalStorageAdmin = typeof window !== 'undefined' && ['admin', 'super_admin', 'superadmin', 'admin_akademik'].includes(localStorage.getItem('user_role') || '')
   const isAdmin = ['super_admin', 'superadmin', 'admin', 'admin_akademik'].includes(userRole) || isLocalStorageAdmin
 

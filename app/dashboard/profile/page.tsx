@@ -283,7 +283,7 @@ export default function ProfilePage() {
   const activeProfile = studentData?.profile || adminData?.profile || lecturerData?.profile || employeeData?.profile || profile
   const initials = `${activeProfile?.first_name?.charAt(0) || ''}${activeProfile?.last_name?.charAt(0) || ''}`
   
-  const userRole = (typeof profile?.role === 'object' ? profile.role.name : profile?.role || '').toLowerCase()
+  const userRole = (profile?.role ? (typeof profile.role === 'object' ? profile.role.name || '' : profile.role) : '').toLowerCase()
   const isLocalStorageMobile = typeof window !== 'undefined' && ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai', 'lecturer'].includes(localStorage.getItem('user_role') || '')
   const isMobileRole = ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai', 'lecturer'].includes(userRole) || isLocalStorageMobile
 
