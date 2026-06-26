@@ -153,10 +153,15 @@ export default function StudentManagementSystem({ defaultTab = 'dashboard' }: { 
 
   // Detect user role & load student info if the logged-in user is a student
   useEffect(() => {
-    if (typeof profile?.role === 'string') {
-      setUserRole(profile.role)
-    } else if (profile?.role?.name) {
-      setUserRole(profile.role.name)
+    // Helper to get role name with type narrowing
+    const getRoleName = (): string | undefined => {
+      if (typeof profile?.role === 'string') return profile.role
+      if (profile?.role && 'name' in profile.role) return profile.role.name
+      return undefined
+    }
+    const roleName = getRoleName()
+    if (roleName) {
+      setUserRole(roleName)
     } else {
       const savedRole = localStorage.getItem('user_role') || 'mahasiswa'
       setUserRole(savedRole)

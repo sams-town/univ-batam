@@ -88,10 +88,15 @@ export default function SlipGajiDosenPage() {
   const [userRole, setUserRole] = useState<string>('')
 
   useEffect(() => {
-    if (typeof profile?.role === 'string') {
-      setUserRole(profile.role)
-    } else if (profile?.role?.name) {
-      setUserRole(profile.role.name)
+    // Helper to get role name with type narrowing
+    const getRoleName = (): string | undefined => {
+      if (typeof profile?.role === 'string') return profile.role
+      if (profile?.role && 'name' in profile.role) return profile.role.name
+      return undefined
+    }
+    const roleName = getRoleName()
+    if (roleName) {
+      setUserRole(roleName)
     } else {
       // Fallback check from localStorage role
       const storedRole = localStorage.getItem('user_role')
