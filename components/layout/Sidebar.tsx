@@ -297,6 +297,73 @@ const menuItems: MenuItem[] = [
   //   ]
   // },
 
+  // Visit & Kinerja Pegawai dan Dosen
+  {
+    id: 'visit-kinerja',
+    title: 'Visit & Kinerja',
+    href: '#',
+    icon: Clock,
+    roles: ['super_admin', 'admin_akademik', 'dosen', 'employee'],
+    children: [
+      {
+        id: 'patroli-security',
+        title: 'Patroli Petugas Security',
+        href: '/dashboard/admin/visit-kinerja/patroli-security',
+        icon: Shield,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'kunjungan',
+        title: 'Kunjungan',
+        href: '/dashboard/admin/visit-kinerja/kunjungan',
+        icon: Calendar,
+        roles: ['super_admin', 'admin_akademik', 'dosen', 'employee']
+      },
+      {
+        id: 'penugasan',
+        title: 'Penugasan',
+        href: '/dashboard/admin/visit-kinerja/penugasan',
+        icon: UserCog,
+        roles: ['super_admin', 'admin_akademik', 'dosen', 'employee']
+      },
+      {
+        id: 'rapat',
+        title: 'Rapat',
+        href: '/dashboard/admin/visit-kinerja/rapat',
+        icon: Calendar,
+        roles: ['super_admin', 'admin_akademik', 'dosen', 'employee']
+      },
+      {
+        id: 'jenis-kinerja',
+        title: 'Jenis Kinerja',
+        href: '/dashboard/admin/visit-kinerja/jenis-kinerja',
+        icon: Settings,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'laporan-kinerja',
+        title: 'Laporan Kinerja',
+        href: '/dashboard/admin/visit-kinerja/laporan-kinerja',
+        icon: BarChart3,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'kinerja-pegawai',
+        title: 'Kinerja Pegawai',
+        href: '/dashboard/admin/visit-kinerja/kinerja-pegawai',
+        icon: User,
+        roles: ['super_admin', 'admin_akademik']
+      },
+      {
+        id: 'laporan-kerja',
+        title: 'Laporan Kerja',
+        href: '/dashboard/admin/visit-kinerja/laporan-kerja',
+        icon: FileText,
+        roles: ['super_admin', 'admin_akademik', 'dosen', 'employee']
+      },
+    ]
+  },
+
   // Keuangan Kampus
   {
     id: 'keuangan-kampus',
