@@ -302,6 +302,26 @@ export default function LoginPage() {
       if (profileError) throw profileError
       if (!profile) throw new Error('Profil tidak ditemukan. Hubungi administrator.')
 
+      // Fetch active academic year and semester to store in local session state
+      const { data: activeYear } = await supabase
+        .from('academic_years')
+        .select('*')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      const { data: activeSem } = await supabase
+        .from('semesters')
+        .select('*')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (activeYear) {
+        localStorage.setItem('active_academic_year', JSON.stringify(activeYear))
+      }
+      if (activeSem) {
+        localStorage.setItem('active_semester', JSON.stringify(activeSem))
+      }
+
       // Redirect based on role
       const role = profile?.role?.name || 'mahasiswa'
       
