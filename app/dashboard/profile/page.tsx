@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, Camera, Save, CheckCircle2, AlertCircle, LogOut } from 'lucide-react'
+import { User, Camera, Save, CheckCircle2, AlertCircle, LogOut, ArrowLeft } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Profile as ProfileType, Student, Program, Department, Faculty, Lecturer } from '@/types'
 
@@ -32,15 +33,20 @@ type FullLecturerData = {
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { profile, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [roleType, setRoleType] = useState<'admin' | 'lecturer' | 'student' | null>(null)
+  const [roleType, setRoleType] = useState<'admin' | 'lecturer' | 'student' | 'employee' | null>(null)
   const [studentData, setStudentData] = useState<FullStudentData | null>(null)
   const [adminData, setAdminData] = useState<FullAdminData | null>(null)
   const [lecturerData, setLecturerData] = useState<FullLecturerData | null>(null)
+  const [employeeData, setEmployeeData] = useState<{
+    profile: ProfileType
+    employee?: any
+  } | null>(null)
 
   // Editable fields
   const [firstName, setFirstName] = useState('')
@@ -61,12 +67,13 @@ export default function ProfilePage() {
       setError('')
       try {
         // Determine user role
-        const roleName = (typeof profile.role === 'string' ? profile.role : (profile.role && 'name' in profile.role ? profile.role.name : undefined))
+        const roleName = (typeof profile.role === 'string' ? profile.role : (profile.role && 'name' in profile.role ? profile.role.name : undefined)) || ''
+        const normalizedRole = roleName.toLowerCase()
         
-        if (roleName === 'super_admin' || roleName === 'admin_akademik') {
+        if (normalizedRole === 'super_admin' || normalizedRole === 'admin_akademik') {
           setRoleType('admin')
           setAdminData({ profile })
-        } else if (roleName === 'dosen') {
+        } else if (normalizedRole === 'dosen') {
           setRoleType('lecturer')
           // Try to fetch lecturer data, if not found use dummy data
           const { data: lecturerDataDB, error: lecturerError } = await supabase
@@ -115,6 +122,29 @@ export default function ProfilePage() {
             lecturer: dummyLecturer,
             department: dummyLecturer.department,
             faculty: dummyLecturer.department?.faculty
+          })
+        } else if (['pegawai', 'karyawan', 'employee'].includes(normalizedRole)) {
+          setRoleType('employee')
+          // Fetch employee data
+          const { data: empData, error: empError } = await supabase
+            .from('employees')
+            .select(`
+              *,
+              department:departments(
+                *,
+                faculty:faculties(*)
+              )
+            `)
+            .eq('profile_id', profile.id)
+            .maybeSingle()
+
+          if (empError && empError.code !== 'PGRST116') {
+            throw empError
+          }
+
+          setEmployeeData({
+            profile,
+            employee: empData || { nip: '123456789', status: 'Tetap' }
           })
         } else {
           setRoleType('student')
@@ -250,15 +280,40 @@ export default function ProfilePage() {
     )
   }
 
-  const activeProfile = studentData?.profile || adminData?.profile || lecturerData?.profile || profile
+  const activeProfile = studentData?.profile || adminData?.profile || lecturerData?.profile || employeeData?.profile || profile
   const initials = `${activeProfile?.first_name?.charAt(0) || ''}${activeProfile?.last_name?.charAt(0) || ''}`
+  
+  const userRole = (typeof profile?.role === 'object' ? profile.role.name : profile?.role || '').toLowerCase()
+  const isLocalStorageMobile = typeof window !== 'undefined' && ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai', 'lecturer'].includes(localStorage.getItem('user_role') || '')
+  const isMobileRole = ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai', 'lecturer'].includes(userRole) || isLocalStorageMobile
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Profil Saya</h1>
-          <p className="text-slate-600 mt-1">Kelola informasi profil dan akun Anda</p>
+        <div className="flex items-center gap-3">
+          {isMobileRole && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const roleKey = localStorage.getItem('user_role') || userRole
+                if (roleKey === 'mahasiswa') {
+                  router.push('/dashboard/student')
+                } else if (roleKey === 'dosen' || roleKey === 'lecturer') {
+                  router.push('/dashboard/lecturer')
+                } else {
+                  router.push('/dashboard/employee')
+                }
+              }}
+              className="rounded-full shadow-sm hover:bg-slate-100"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-700" />
+            </Button>
+          )}
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900">Profil Saya</h1>
+            <p className="text-slate-600 mt-1">Kelola informasi profil dan akun Anda</p>
+          </div>
         </div>
         <Button variant="destructive" onClick={handleLogout} className="gap-2">
           <LogOut className="h-4 w-4" />
@@ -358,6 +413,28 @@ export default function ProfilePage() {
                 <div>
                   <Label className="text-sm text-slate-500">Pangkat/Golongan</Label>
                   <p className="text-slate-900">IV/a</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {roleType === 'employee' && (
+            <Card className="shadow-lg border-slate-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-slate-900">Informasi Kepegawaian</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-sm text-slate-500">NIP</Label>
+                  <p className="text-lg font-semibold text-slate-900">{employeeData?.employee?.nip || '123456789'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-slate-500">Status Kepegawaian</Label>
+                  <p className="text-slate-900">{employeeData?.employee?.status || 'Tetap'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-slate-500">Jabatan/Role</Label>
+                  <p className="text-slate-900">Pegawai / Staf</p>
                 </div>
               </CardContent>
             </Card>

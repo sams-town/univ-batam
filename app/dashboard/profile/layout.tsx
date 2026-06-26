@@ -27,10 +27,12 @@ export default function ProfileLayout({
     )
   }
 
+  const isMobileRole = userRole && ['mahasiswa', 'dosen', 'employee', 'karyawan', 'pegawai'].includes(userRole)
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-slate-50 min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50">
+      {!isMobileRole && <Sidebar />}
+      <main className="flex-1 w-full">
         {children}
       </main>
     </div>
