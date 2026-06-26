@@ -175,127 +175,127 @@ const menuItems: MenuItem[] = [
   },
 
   // Manajemen Mahasiswa
-  {
-    id: 'manajemen-mahasiswa',
-    title: 'Manajemen Mahasiswa',
-    href: '#',
-    icon: GraduationCap,
-    roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa'],
-    children: [
-      {
-        id: 'mhs-dashboard',
-        title: 'Dashboard',
-        href: '/dashboard/admin/mahasiswa/dashboard',
-        icon: LayoutDashboard,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-data',
-        title: 'Data Mahasiswa',
-        href: '/dashboard/admin/mahasiswa/data',
-        icon: Users,
-        roles: ['super_admin', 'admin_akademik', 'dosen']
-      },
-      {
-        id: 'mhs-status',
-        title: 'Status Akademik',
-        href: '/dashboard/admin/mahasiswa/status',
-        icon: CheckSquare,
-        roles: ['super_admin', 'admin_akademik', 'dosen']
-      },
-      {
-        id: 'mhs-krs',
-        title: 'KRS',
-        href: '/dashboard/admin/mahasiswa/krs',
-        icon: BookOpen,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-khs',
-        title: 'KHS',
-        href: '/dashboard/admin/mahasiswa/khs',
-        icon: FileText,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-transkrip',
-        title: 'Transkrip Nilai',
-        href: '/dashboard/admin/mahasiswa/transkrip',
-        icon: GraduationCap,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-presensi',
-        title: 'Presensi Mahasiswa',
-        href: '/dashboard/admin/mahasiswa/presensi',
-        icon: Clock,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-perizinan',
-        title: 'Perizinan Absensi',
-        href: '/dashboard/admin/mahasiswa/perizinan',
-        icon: FileText,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-pelanggaran',
-        title: 'Pelanggaran',
-        href: '/dashboard/admin/mahasiswa/pelanggaran',
-        icon: UserMinus,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-prestasi',
-        title: 'Prestasi Mahasiswa',
-        href: '/dashboard/admin/mahasiswa/prestasi',
-        icon: Award,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-beasiswa',
-        title: 'Beasiswa',
-        href: '/dashboard/admin/mahasiswa/beasiswa',
-        icon: CreditCard,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-pkl',
-        title: 'PKL / Magang',
-        href: '/dashboard/admin/mahasiswa/pkl',
-        icon: Briefcase,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-skripsi',
-        title: 'Skripsi / Tugas Akhir',
-        href: '/dashboard/admin/mahasiswa/skripsi',
-        icon: Book,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-riwayat',
-        title: 'Riwayat Akademik',
-        href: '/dashboard/admin/mahasiswa/riwayat',
-        icon: Calendar,
-        roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
-      },
-      {
-        id: 'mhs-alumni',
-        title: 'Alumni',
-        href: '/dashboard/admin/mahasiswa/alumni',
-        icon: GraduationCap,
-        roles: ['super_admin', 'admin_akademik', 'dosen']
-      },
-      {
-        id: 'mhs-pengaturan',
-        title: 'Pengaturan',
-        href: '/dashboard/admin/mahasiswa/pengaturan',
-        icon: Settings,
-        roles: ['super_admin', 'admin_akademik']
-      },
-    ]
-  },
+  // {
+  //   id: 'manajemen-mahasiswa',
+  //   title: 'Manajemen Mahasiswa',
+  //   href: '#',
+  //   icon: GraduationCap,
+  //   roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa'],
+  //   children: [
+  //     {
+  //       id: 'mhs-dashboard',
+  //       title: 'Dashboard',
+  //       href: '/dashboard/admin/mahasiswa/dashboard',
+  //       icon: LayoutDashboard,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-data',
+  //       title: 'Data Mahasiswa',
+  //       href: '/dashboard/admin/mahasiswa/data',
+  //       icon: Users,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen']
+  //     },
+  //     {
+  //       id: 'mhs-status',
+  //       title: 'Status Akademik',
+  //       href: '/dashboard/admin/mahasiswa/status',
+  //       icon: CheckSquare,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen']
+  //     },
+  //     {
+  //       id: 'mhs-krs',
+  //       title: 'KRS',
+  //       href: '/dashboard/admin/mahasiswa/krs',
+  //       icon: BookOpen,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-khs',
+  //       title: 'KHS',
+  //       href: '/dashboard/admin/mahasiswa/khs',
+  //       icon: FileText,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-transkrip',
+  //       title: 'Transkrip Nilai',
+  //       href: '/dashboard/admin/mahasiswa/transkrip',
+  //       icon: GraduationCap,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-presensi',
+  //       title: 'Presensi Mahasiswa',
+  //       href: '/dashboard/admin/mahasiswa/presensi',
+  //       icon: Clock,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-perizinan',
+  //       title: 'Perizinan Absensi',
+  //       href: '/dashboard/admin/mahasiswa/perizinan',
+  //       icon: FileText,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-pelanggaran',
+  //       title: 'Pelanggaran',
+  //       href: '/dashboard/admin/mahasiswa/pelanggaran',
+  //       icon: UserMinus,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-prestasi',
+  //       title: 'Prestasi Mahasiswa',
+  //       href: '/dashboard/admin/mahasiswa/prestasi',
+  //       icon: Award,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-beasiswa',
+  //       title: 'Beasiswa',
+  //       href: '/dashboard/admin/mahasiswa/beasiswa',
+  //       icon: CreditCard,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-pkl',
+  //       title: 'PKL / Magang',
+  //       href: '/dashboard/admin/mahasiswa/pkl',
+  //       icon: Briefcase,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-skripsi',
+  //       title: 'Skripsi / Tugas Akhir',
+  //       href: '/dashboard/admin/mahasiswa/skripsi',
+  //       icon: Book,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-riwayat',
+  //       title: 'Riwayat Akademik',
+  //       href: '/dashboard/admin/mahasiswa/riwayat',
+  //       icon: Calendar,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen', 'mahasiswa']
+  //     },
+  //     {
+  //       id: 'mhs-alumni',
+  //       title: 'Alumni',
+  //       href: '/dashboard/admin/mahasiswa/alumni',
+  //       icon: GraduationCap,
+  //       roles: ['super_admin', 'admin_akademik', 'dosen']
+  //     },
+  //     {
+  //       id: 'mhs-pengaturan',
+  //       title: 'Pengaturan',
+  //       href: '/dashboard/admin/mahasiswa/pengaturan',
+  //       icon: Settings,
+  //       roles: ['super_admin', 'admin_akademik']
+  //     },
+  //   ]
+  // },
 
   // Keuangan Kampus
   {
