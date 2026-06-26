@@ -66,27 +66,38 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated, check their role and protect dashboard sections
+  // If user is authenticated and visiting dashboard, check role from profiles table
   if (user && pathname.startsWith('/dashboard')) {
-    // Read role directly from raw metadata (set by database trigger on auth.users)
-    const role = user.user_metadata?.role || user.app_metadata?.role || 'mahasiswa'
+    // Query role directly from profiles table (more reliable than JWT metadata)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, role_id')
+      .eq('id', user.id)
+      .maybeSingle()
 
-    // Admin & HRIS check: only admin/superadmin roles allowed
+    // Resolve role: profile.role is a VARCHAR string from migration 007
+    // Fall back to JWT metadata as secondary source, then default to 'mahasiswa'
+    const role = (typeof profile?.role === 'string' ? profile.role : null)
+      || user.user_metadata?.role
+      || user.app_metadata?.role
+      || 'mahasiswa'
+
+    // Admin check: only admin/superadmin roles allowed in /dashboard/admin
     if (pathname.startsWith('/dashboard/admin') && !['super_admin', 'admin', 'admin_akademik'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    // Lecturer/KBM check: only dosen role allowed
+    // Lecturer check: only dosen role allowed in /dashboard/lecturer
     if (pathname.startsWith('/dashboard/lecturer') && role !== 'dosen') {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    // Student/KRS check: only mahasiswa role allowed
+    // Student check: only mahasiswa role allowed in /dashboard/student
     if (pathname.startsWith('/dashboard/student') && role !== 'mahasiswa') {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    // Employee check: only employees allowed
+    // Employee check: only employees allowed in /dashboard/employee
     if (pathname.startsWith('/dashboard/employee') && !['employee', 'karyawan', 'pegawai'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
