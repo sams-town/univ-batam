@@ -171,6 +171,13 @@ const menuItems: MenuItem[] = [
         icon: WalletCards,
         roles: ['super_admin', 'admin_akademik']
       },
+      {
+        id: 'dokumen-pegawai',
+        title: 'Dokumen Pegawai',
+        href: '/dashboard/admin/dokumen-pegawai',
+        icon: FileText,
+        roles: ['super_admin', 'admin_akademik']
+      },
     ]
   },
 
