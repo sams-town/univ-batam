@@ -21,10 +21,9 @@ export default function DashboardPage() {
       router.replace("/dashboard/admin");
     } else if (userRole === "lecturer" || userRole === "dosen") {
       router.replace("/dashboard/lecturer");
-    } else if (userRole === "employee" || userRole === "karyawan" || userRole === "pegawai") {
-      router.replace("/dashboard/employee");
     } else {
-      router.replace("/dashboard/student");
+      // Default to employee/pegawai for all other roles
+      router.replace("/dashboard/employee");
     }
   }, [router]);
 
