@@ -1,403 +1,503 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useRef, useEffect } from 'react'
+import {
+  Camera,
+  X,
+  CheckCircle2,
+  Clock,
+  User,
+  LogIn,
+  LogOut,
+  CreditCard,
+  FileText,
+  Calendar,
+  Settings,
+  GraduationCap,
+  MapPin
+} from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Fingerprint, X, Copy, CheckCircle2 } from 'lucide-react'
-import DashboardTopCards from '@/components/dashboard/DashboardTopCards'
-import DashboardQuickLinks from '@/components/dashboard/DashboardQuickLinks'
-import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav'
 
-function generateRandomToken(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let token = ''
-  for (let i = 0; i < 4; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
+// Quick access menu items
+const quickMenuItems = [
+  {
+    id: 'slip-gaji',
+    label: 'Slip Gaji',
+    icon: CreditCard,
+    color: 'from-blue-500 to-blue-600',
+    link: '/dashboard/payroll'
+  },
+  {
+    id: 'pengajuan-cuti',
+    label: 'Pengajuan Cuti',
+    icon: Calendar,
+    color: 'from-emerald-500 to-emerald-600',
+    link: '/dashboard/attendance'
+  },
+  {
+    id: 'laporan-kehadiran',
+    label: 'Laporan Kehadiran',
+    icon: FileText,
+    color: 'from-purple-500 to-purple-600',
+    link: '/dashboard/reports'
+  },
+  {
+    id: 'profil-akademik',
+    label: 'Profil Akademik',
+    icon: GraduationCap,
+    color: 'from-amber-500 to-amber-600',
+    link: '/dashboard/profile'
+  },
+  {
+    id: 'pengaturan-akun',
+    label: 'Pengaturan Akun',
+    icon: Settings,
+    color: 'from-slate-500 to-slate-600',
+    link: '/dashboard/profile'
   }
-  return token
-}
+]
 
 export default function LecturerDashboardPage() {
-  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false)
-  const [generatedToken, setGeneratedToken] = useState('')
-  const [isTokenActive, setIsTokenActive] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const { profile, user } = useAuth()
 
-  // Sesi Kelas Form States
-  const [schedules, setSchedules] = useState<any[]>([])
-  const [selectedSchedule, setSelectedSchedule] = useState('')
-  const [beritaAcara, setBeritaAcara] = useState('')
-  const [mode, setMode] = useState<'daring' | 'luring'>('luring')
-  const [pertemuan, setPertemuan] = useState(1)
+  // Camera state
+  const [cameraActive, setCameraActive] = useState(false)
+  const [cameraLoading, setCameraLoading] = useState(false)
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
+  const [cameraError, setCameraError] = useState<string | null>(null)
 
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
+  // Attendance state
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [attendanceResult, setAttendanceResult] = useState<{
+    type: 'in' | 'out'
+    time: string
+    isLate: boolean
+    lateMinutes: number
+  } | null>(null)
 
-  // Load lecturer schedules on component mount
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  // Live time
+  const [currentTime, setCurrentTime] = useState('00:00:00')
+  const [currentDate, setCurrentDate] = useState('')
+
+  // Update time
   useEffect(() => {
-    const loadSchedules = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return
+    const updateTime = () => {
+      const now = new Date()
+      setCurrentTime(
+        now.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZone: 'Asia/Jakarta'
+        }).replace(/\./g, ':')
+      )
+      setCurrentDate(
+        now.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      )
+    }
 
-        const { data: lecturer } = await supabase
-          .from('lecturers')
-          .select('id')
-          .eq('profile_id', session.user.id)
-          .maybeSingle()
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
-        if (lecturer) {
-          const { data } = await supabase
-            .from('schedules')
-            .select('*, course:courses(*), classroom:classrooms(*)')
-            .eq('lecturer_id', lecturer.id)
-          
-          if (data && data.length > 0) {
-            setSchedules(data)
-            setSelectedSchedule(data[0].id)
-          } else {
-            throw new Error("No active schedules found")
-          }
-        } else {
-          throw new Error("Lecturer profile not found")
+  // Stop camera function
+  const stopCamera = () => {
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks()
+      tracks.forEach((t) => t.stop())
+      streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setCameraActive(false)
+  }
+
+  // Start camera function
+  const startCamera = async () => {
+    if (cameraActive || cameraLoading) return
+    setCameraLoading(true)
+    setCameraError(null)
+    setCapturedPhoto(null)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          facingMode: 'user'
+        },
+        audio: false
+      })
+
+      streamRef.current = stream
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play()
         }
-      } catch (err) {
-        // Fallback mock schedules for testing and demo simulation
-        const mockSchedules = [
-          { id: 'sch1', course: { name: 'Pemrograman Web', code: 'PW' }, classroom: { name: 'Lab Komputer 201' } },
-          { id: 'sch2', course: { name: 'Basis Data', code: 'BD' }, classroom: { name: 'Ruang 102' } }
-        ]
-        setSchedules(mockSchedules)
-        setSelectedSchedule(mockSchedules[0].id)
+      }
+
+      setCameraActive(true)
+    } catch (err: any) {
+      console.error('Camera error:', err)
+      if (err.name === 'NotAllowedError') {
+        setCameraError('Izin kamera ditolak. Silakan izinkan akses kamera.')
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('Kamera tidak ditemukan di perangkat Anda.')
+      } else {
+        setCameraError('Gagal mengakses kamera. Silakan coba lagi.')
+      }
+    } finally {
+      setCameraLoading(false)
+    }
+  }
+
+  // Capture photo function
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d')
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth
+        canvasRef.current.height = videoRef.current.videoHeight
+        context.drawImage(videoRef.current, 0, 0)
+        const photoUrl = canvasRef.current.toDataURL('image/png')
+        setCapturedPhoto(photoUrl)
+        stopCamera()
       }
     }
-    loadSchedules()
-  }, [])
+  }
 
-  const handleFabClick = useCallback(() => {
-    setIsTokenModalOpen(true)
-  }, [])
-
-  // Call API to open class session
-  const handleOpenSession = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedSchedule || !beritaAcara) {
-      setErrorMsg('Harap pilih jadwal kuliah dan lengkapi berita acara.')
+  // Handle attendance
+  const handleAttendance = async (type: 'in' | 'out') => {
+    if (!capturedPhoto) {
+      if (!cameraActive) {
+        startCamera()
+      } else {
+        capturePhoto()
+      }
       return
     }
 
-    setLoading(true)
-    setErrorMsg('')
-    setSuccessMsg('')
-
-    const token = generateRandomToken()
+    setIsSubmitting(true)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      let newSession;
-      if (session) {
-        // Call enterprise route handler client
-        const response = await fetch('/api/attendance/buka-kelas', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            scheduleId: selectedSchedule,
-            token,
-            beritaAcara,
-            mode,
-            pertemuan
-          })
+      const response = await fetch('/api/attendance/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          type,
+          photoUrl: capturedPhoto,
+          location: null
         })
+      })
 
-        const resData = await response.json()
-        if (!response.ok || !resData.success) {
-          throw new Error(resData.error || 'Gagal menghubungi server untuk membuka sesi kelas.')
-        }
-        newSession = resData.data
-      } else {
-        // Fallback simulation in local environment when auth session is offline
-        const sessionObj = {
-          id: crypto.randomUUID(),
-          schedule_id: selectedSchedule,
-          token,
-          berita_acara: beritaAcara,
-          mode,
-          pertemuan,
-          opened_at: new Date().toISOString(),
-          is_open: true
-        }
-        
-        const localSessions = localStorage.getItem('local_attendance_sessions')
-        const list = localSessions ? JSON.parse(localSessions) : []
-        list.push(sessionObj)
-        localStorage.setItem('local_attendance_sessions', JSON.stringify(list))
-        newSession = sessionObj
+      const data = await response.json()
+
+      if (data.success) {
+        setAttendanceResult({
+          type,
+          time: data.formattedTime,
+          isLate: data.isLate,
+          lateMinutes: data.lateMinutes
+        })
+        setShowSuccessModal(true)
       }
-
-      setGeneratedToken(token)
-      setIsTokenActive(true)
-      setSuccessMsg('Sesi kelas berhasil dibuka! Token absensi aktif.')
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan sistem.')
+    } catch (error) {
+      console.error('Error submitting attendance:', error)
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
-  const handleCloseSession = () => {
-    setIsTokenActive(false)
-    setGeneratedToken('')
-    setBeritaAcara('')
-    setErrorMsg('')
-    setSuccessMsg('')
-    setIsTokenModalOpen(false)
+  // Reset after success
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false)
+    setCapturedPhoto(null)
+    setAttendanceResult(null)
   }
 
-  const handleCopyToken = () => {
-    navigator.clipboard.writeText(generatedToken).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const userFullName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Dosen'
+  const initials = `${profile?.first_name?.charAt(0) || ''}${profile?.last_name?.charAt(0) || ''}` || 'DS'
+  const roleLabel = 'Dosen'
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-24">
-      {/* Header Background */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 pt-6">
-        <div className="px-6 pb-8">
-          <p className="text-4xl font-bold text-white mb-1">
-            {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </p>
-          <p className="text-sm opacity-80 text-white uppercase">
-            {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Background Blur Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20" />
+        <div className="absolute top-1/3 -left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-15" />
+        <div className="absolute -bottom-40 right-1/4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20" />
       </div>
 
-      {/* Main Content */}
-      <div className="px-4 -mt-4">
-        {/* Top Cards */}
-        <DashboardTopCards role="dosen" />
-
-        {/* Quick Attendance Button */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
-          <div className="flex items-center justify-between">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 border-2 border-white shadow-lg">
+              <AvatarImage src={profile?.avatar_url || ''} />
+              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-bold text-xl">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm font-semibold text-slate-500">MULAI HARI INI</p>
-              <p className="text-xl font-bold text-slate-900">Buka Sesi Absen Kelas</p>
+              <p className="text-sm text-slate-500 font-medium">Selamat Datang,</p>
+              <h1 className="text-2xl font-bold text-slate-900">{userFullName}</h1>
+              <p className="text-sm text-blue-600 font-semibold">{roleLabel}</p>
             </div>
-            <button
-              onClick={handleFabClick}
-              className="w-14 h-14 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform cursor-pointer"
-            >
-              <Fingerprint className="h-8 w-8 text-white" />
-            </button>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-extrabold text-slate-800">{currentTime}</p>
+            <p className="text-sm text-slate-500">{currentDate}</p>
           </div>
         </div>
 
-        {/* Token Status Indicator */}
-        {isTokenActive && (
-          <div
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-4 shadow-sm mb-4 cursor-pointer active:scale-[0.98] transition-transform"
-            onClick={() => setIsTokenModalOpen(true)}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-purple-200">TOKEN ABSENSI AKTIF</p>
-                <p className="text-3xl font-mono font-bold text-white tracking-[0.3em]">{generatedToken}</p>
-              </div>
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+        {/* Main Attendance Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Left: Camera Section */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
+            <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Camera className="h-6 w-6 text-blue-600" />
+              Kamera Absensi
+            </h2>
+
+            {/* Camera Viewfinder */}
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden aspect-video mb-4">
+              {/* Video Element */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute inset-0 w-full h-full object-cover ${cameraActive && !capturedPhoto ? 'block' : 'hidden'}`}
+              />
+
+              {/* Captured Photo */}
+              {capturedPhoto && (
+                <div className="absolute inset-0">
+                  <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover" />
+                  <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1.5 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Foto Diambil
+                  </div>
+                </div>
+              )}
+
+              {/* Placeholder */}
+              {!cameraActive && !capturedPhoto && !cameraLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-6">
+                  <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-4 border border-white/20">
+                    <Camera className="h-12 w-12 text-white/70" />
+                  </div>
+                  <p className="text-lg font-medium text-white/80">Kamera tidak aktif</p>
+                  <p className="text-sm text-white/60 mt-1">Klik tombol di bawah untuk memulai</p>
+                </div>
+              )}
+
+              {/* Loading */}
+              {cameraLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
+                  <div className="h-12 w-12 border-4 border-slate-600 border-t-blue-400 rounded-full animate-spin mb-4" />
+                  <span className="text-lg">Membuka kamera...</span>
+                </div>
+              )}
+
+              {/* Error */}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 p-6 text-center">
+                  <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                    <X className="h-10 w-10 text-red-500" />
+                  </div>
+                  <p className="text-red-300 font-semibold text-lg max-w-xs">{cameraError}</p>
+                </div>
+              )}
+
+              {/* Camera Guide Overlay */}
+              {cameraActive && !capturedPhoto && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-56 h-72 border-3 border-dashed border-blue-400/60 rounded-[50%]" />
+                </div>
+              )}
+
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            {/* Camera Controls */}
+            <div className="flex gap-3">
+              {!cameraActive && !capturedPhoto && (
+                <Button
+                  onClick={startCamera}
+                  disabled={cameraLoading}
+                  className="flex-1 h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg rounded-2xl"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  {cameraLoading ? 'Membuka...' : 'Buka Kamera'}
+                </Button>
+              )}
+
+              {cameraActive && !capturedPhoto && (
+                <>
+                  <Button
+                    onClick={capturePhoto}
+                    className="flex-1 h-14 text-base font-semibold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg rounded-2xl"
+                  >
+                    <Camera className="h-5 w-5 mr-2" />
+                    Ambil Foto
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={stopCamera}
+                    className="h-14 text-base font-semibold rounded-2xl border border-slate-200"
+                  >
+                    <X className="h-5 w-5 mr-2" />
+                    Tutup
+                  </Button>
+                </>
+              )}
+
+              {capturedPhoto && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setCapturedPhoto(null)
+                    startCamera()
+                  }}
+                  className="flex-1 h-14 text-base font-semibold rounded-2xl border border-slate-200"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  Ulangi Foto
+                </Button>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Quick Links */}
-        <DashboardQuickLinks role="dosen" />
-
-        {/* Activity List */}
-        <div className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-lg font-bold text-slate-900">Aktivitas Terakhir</p>
-            <p className="text-sm text-emerald-600 font-semibold">Lihat →</p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <Fingerprint className="h-6 w-6 text-emerald-600" />
+          {/* Right: Attendance Buttons */}
+          <div className="space-y-6">
+            {/* Attendance Buttons */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
+              <h2 className="text-xl font-bold text-slate-800 mb-6">Absensi Hari Ini</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  onClick={() => handleAttendance('in')}
+                  disabled={isSubmitting}
+                  className="h-24 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
+                >
+                  <LogIn className="h-8 w-8" />
+                  <span>Absen Masuk</span>
+                </Button>
+                <Button
+                  onClick={() => handleAttendance('out')}
+                  disabled={isSubmitting}
+                  className="h-24 text-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
+                >
+                  <LogOut className="h-8 w-8" />
+                  <span>Absen Keluar</span>
+                </Button>
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-slate-900">Riwayat Generate Token</p>
-                <p className="text-sm text-slate-500">Lihat token absensi yang sudah dibuat</p>
+              {isSubmitting && (
+                <div className="text-center mt-4 text-slate-600 flex items-center justify-center gap-2">
+                  <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  Memproses absensi...
+                </div>
+              )}
+            </div>
+
+            {/* Quick Menu */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">Akses Cepat Menu Dosen</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                {quickMenuItems.map((item) => {
+                  const IconComponent = item.icon
+                  return (
+                    <a
+                      key={item.id}
+                      href={item.link}
+                      className="group flex flex-col items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                    >
+                      <div className={`w-14 h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform mb-3`}>
+                        <IconComponent className="h-7 w-7 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 text-center">
+                        {item.label}
+                      </span>
+                    </a>
+                  )
+                })}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Class Session / Token Generator Modal */}
-      {isTokenModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={() => setIsTokenModalOpen(false)}>
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {!isTokenActive ? (
-              /* Step 1: Open Sesi Kelas Form (Double submit prevention, loaders, feedback) */
-              <form onSubmit={handleOpenSession} className="p-6 space-y-4">
-                <div className="flex justify-between items-center border-b pb-3 mb-2">
-                  <h3 className="font-bold text-slate-800 text-lg">Buka Sesi Kelas</h3>
-                  <button type="button" onClick={() => setIsTokenModalOpen(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer">
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                {errorMsg && (
-                  <div className="p-3 bg-red-50 text-red-700 rounded-xl text-xs font-bold border border-red-200 animate-pulse">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <Label htmlFor="schedule" className="text-xs font-bold text-slate-500">Pilih Mata Kuliah & Jadwal</Label>
-                  <select
-                    id="schedule"
-                    value={selectedSchedule}
-                    onChange={(e) => setSelectedSchedule(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500/20 outline-none font-semibold"
-                  >
-                    {schedules.map(sch => (
-                      <option key={sch.id} value={sch.id}>
-                        {sch.course?.name || 'Mata Kuliah'} ({sch.classroom?.name || 'Aula'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="berita" className="text-xs font-bold text-slate-500">Berita Acara / Pokok Bahasan</Label>
-                  <Input
-                    id="berita"
-                    type="text"
-                    required
-                    placeholder="Contoh: Pemrograman Berorientasi Objek"
-                    value={beritaAcara}
-                    onChange={(e) => setBeritaAcara(e.target.value)}
-                    className="h-10 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500/20"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="mode" className="text-xs font-bold text-slate-500">Mode Kelas</Label>
-                    <select
-                      id="mode"
-                      value={mode}
-                      onChange={(e) => setMode(e.target.value as any)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500/20 outline-none font-semibold"
-                    >
-                      <option value="luring">Luring (Tatap Muka)</option>
-                      <option value="daring">Daring (Online)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="pertemuan" className="text-xs font-bold text-slate-500">Pertemuan Ke</Label>
-                    <select
-                      id="pertemuan"
-                      value={pertemuan}
-                      onChange={(e) => setPertemuan(parseInt(e.target.value))}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500/20 outline-none font-semibold"
-                    >
-                      {Array.from({ length: 16 }, (_, i) => i + 1).map(num => (
-                        <option key={num} value={num}>Pertemuan {num}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 mt-4 cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    <span>Buka Sesi Kelas & Buat Token</span>
-                  )}
-                </Button>
-              </form>
-            ) : (
-              /* Step 2: Sesi Kelas Active Screen */
-              <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-center relative">
-                  <button
-                    onClick={() => setIsTokenModalOpen(false)}
-                    className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                  <p className="text-sm font-semibold text-purple-200 mb-2">TOKEN ABSENSI AKTIF</p>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-2xl py-6 px-4">
-                    <p className="text-6xl font-mono font-bold text-white tracking-[0.4em] drop-shadow-lg">
-                      {generatedToken}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 mt-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-sm text-purple-200">Sesi Sedang Berjalan</span>
-                  </div>
-                </div>
-
-                {/* Modal Body */}
-                <div className="p-6 space-y-3">
-                  {successMsg && (
-                    <div className="p-3 bg-emerald-50 text-emerald-800 text-center text-xs font-bold rounded-xl border border-emerald-250 mb-2 animate-bounce">
-                      {successMsg}
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleCopyToken}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 font-semibold transition-colors cursor-pointer"
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                        <span className="text-emerald-600">Tersalin!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-5 w-5" />
-                        <span>Salin Token</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={handleCloseSession}
-                    className="w-full py-3 px-4 bg-red-50 hover:bg-red-100 rounded-xl text-red-600 font-semibold transition-colors cursor-pointer"
-                  >
-                    Tutup Sesi / Matikan Token
-                  </button>
+      {/* Success Modal */}
+      {showSuccessModal && attendanceResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+          <div className="absolute inset-0" onClick={handleSuccessClose} />
+          <div className="relative w-full max-w-md mx-4 bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-white/50 shadow-2xl overflow-hidden">
+            {/* Decorative Top */}
+            <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-3" />
+            <div className="p-8">
+              {/* Success Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="w-28 h-28 bg-emerald-100 rounded-full flex items-center justify-center animate-bounce">
+                  <CheckCircle2 className="h-16 w-16 text-emerald-600" />
                 </div>
               </div>
-            )}
+
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-extrabold text-slate-900 mb-2">
+                  Terima Kasih!
+                </h3>
+                <p className="text-slate-600 text-xl">
+                  Sudah {attendanceResult.type === 'in' ? 'absen masuk' : 'absen keluar'}
+                </p>
+                <p className="text-slate-800 font-bold text-2xl mt-3">
+                  Jam {attendanceResult.time} WIB
+                </p>
+              </div>
+
+              {/* Late Warning */}
+              {attendanceResult.type === 'in' && attendanceResult.isLate && (
+                <div className="mb-8 bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-4">
+                    <Clock className="h-9 w-9 text-yellow-600 flex-shrink-0" />
+                    <div>
+                      <p className="text-yellow-800 font-semibold text-lg">
+                        Dengan keterlambatan {attendanceResult.lateMinutes} menit
+                      </p>
+                      <p className="text-yellow-600 text-base mt-1">
+                        (sesuai waktu yang di-set admin)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={handleSuccessClose}
+                className="w-full h-16 text-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-2xl shadow-lg"
+              >
+                Selesai
+              </Button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Bottom Nav */}
-      <DashboardBottomNav role="dosen" onFabClick={handleFabClick} />
     </div>
   )
 }

@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -10,52 +9,11 @@ import type { Profile } from '@/types'
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [activeAcademicYear, setActiveAcademicYear] = useState<any | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('active_academic_year');
-      return saved ? JSON.parse(saved) : null;
-    }
-    return null;
-  });
-  const [activeSemester, setActiveSemester] = useState<any | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('active_semester');
-      return saved ? JSON.parse(saved) : null;
-    }
-    return null;
-  });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const abortController = new AbortController();
-
-    const fetchActiveAcademicInfo = async () => {
-      try {
-        const { data: activeYear } = await supabase
-          .from('academic_years')
-          .select('*')
-          .eq('is_active', true)
-          .maybeSingle();
-
-        const { data: activeSem } = await supabase
-          .from('semesters')
-          .select('*')
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (activeYear) {
-          setActiveAcademicYear(activeYear);
-          localStorage.setItem('active_academic_year', JSON.stringify(activeYear));
-        }
-        if (activeSem) {
-          setActiveSemester(activeSem);
-          localStorage.setItem('active_semester', JSON.stringify(activeSem));
-        }
-      } catch (err) {
-        console.error('Error fetching active academic year or semester:', err);
-      }
-    };
 
     const fetchAndHealProfile = async (userId: string, email: string) => {
       let { data: profileData, error } = await supabase
@@ -127,7 +85,6 @@ export function useAuth() {
         );
 
         setProfile(profileData);
-        await fetchActiveAcademicInfo();
       } catch (err) {
         console.error('Session or profile request failed:', err);
       } finally {
@@ -143,10 +100,7 @@ export function useAuth() {
           if (event === 'SIGNED_OUT') {
             setUser(null);
             setProfile(null);
-            setActiveAcademicYear(null);
-            setActiveSemester(null);
-            localStorage.removeItem('active_academic_year');
-            localStorage.removeItem('active_semester');
+            localStorage.removeItem('user_role');
             setLoading(false);
             router.push('/login');
           } else if (session) {
@@ -155,9 +109,7 @@ export function useAuth() {
               session.user.id,
               session.user.email || ''
             );
-            
             setProfile(profileData);
-            await fetchActiveAcademicInfo();
           }
         } catch (err) {
           console.error('Auth state change error:', err);
@@ -173,6 +125,5 @@ export function useAuth() {
     };
   }, [router]);
 
-  return { user, profile, loading, activeAcademicYear, activeSemester };
+  return { user, profile, loading };
 }
-
