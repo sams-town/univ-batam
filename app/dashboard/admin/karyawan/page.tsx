@@ -15,6 +15,7 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 
 // Mock Karyawan Data
 const mockKaryawan = [
@@ -110,6 +111,8 @@ export default function KaryawanManagementPage() {
   const [currentTab, setCurrentTab] = useState('personal')
   const [formData, setFormData] = useState<Record<string, any>>(initialFormData)
   const [karyawans, setKaryawans] = useState<any[]>(mockKaryawan)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedKaryawan, setSelectedKaryawan] = useState<any>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -217,46 +220,126 @@ export default function KaryawanManagementPage() {
     setFormData({ ...formData, additionalDocs: newDocs })
   }
 
+  // Load karyawan from Supabase
+  const loadKaryawan = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*, profile:profiles(first_name, last_name, email, phone)')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+
+      const formattedData = (data || []).map((emp, index) => ({
+        id: emp.id,
+        nip: emp.nip || `EMP-${index + 1}`,
+        nama: `${emp.profile?.first_name || ''} ${emp.profile?.last_name || ''}`.trim(),
+        divisi: 'IT',
+        status: emp.status || 'Tetap',
+        faceRegistered: false
+      }))
+
+      setKaryawans(formattedData)
+    } catch (err) {
+      console.error('Error loading karyawan:', err)
+    }
+  }
+
+  // Initial load
+  useEffect(() => {
+    loadKaryawan()
+  }, [])
+
   const handleSubmit = async () => {
     try {
-      const profileId = crypto.randomUUID()
+      setErrorMessage(null)
+      setSuccessMessage(null)
+
+      // Get role_id for karyawan (pegawai)
+      let { data: roleData, error: roleError } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'pegawai')
+        .maybeSingle()
+
+      if (roleError) {
+        setErrorMessage('Error mendapatkan role: ' + roleError.message)
+        return
+      }
+
+      // Fallback: check 'karyawan' if 'pegawai' is not found
+      if (!roleData) {
+        const { data: fallbackRole, error: fallbackError } = await supabase
+          .from('roles')
+          .select('id')
+          .eq('name', 'karyawan')
+          .maybeSingle()
+
+        if (fallbackError) {
+          setErrorMessage('Error mendapatkan role: ' + fallbackError.message)
+          return
+        }
+        roleData = fallbackRole
+      }
+
+      if (!roleData) {
+        setErrorMessage('Role karyawan/pegawai tidak ditemukan di database!')
+        return
+      }
+
       const nameParts = formData.nama.split(' ')
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
 
-      const { error: profileError } = await supabase.from('profiles').insert([{
-        id: profileId,
-        first_name: firstName,
-        last_name: lastName,
-        email: formData.email,
-        phone: formData.hp,
-        gender: formData.jenisKelamin === 'Laki-laki' ? 'laki-laki' : (formData.jenisKelamin === 'Perempuan' ? 'perempuan' : ''),
-        place_of_birth: formData.lokasi,
-        date_of_birth: formData.tglLahir || null,
-        address_ktp: formData.alamat,
-        address_domicile: formData.alamatDomisili,
-      }])
+      // Insert profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          first_name: firstName,
+          last_name: lastName,
+          email: formData.email,
+          phone: formData.hp,
+          gender: formData.jenisKelamin === 'Laki-laki' ? 'laki-laki' : (formData.jenisKelamin === 'Perempuan' ? 'perempuan' : ''),
+          place_of_birth: formData.lokasi,
+          date_of_birth: formData.tglLahir || null,
+          address_ktp: formData.alamat,
+          address_domicile: formData.alamatDomisili,
+          role_id: roleData.id
+        }])
+        .select('id')
+        .single()
 
       if (profileError) {
-        console.error('Error inserting profile:', profileError)
+        setErrorMessage('Error membuat profil: ' + profileError.message)
         return
       }
 
-      const { error: employeeError } = await supabase.from('employees').insert([{
-        profile_id: profileId,
-        nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
-        status: formData.status || 'Tetap'
-      }])
+      // Insert employee
+      const { error: employeeError } = await supabase
+        .from('employees')
+        .insert([{
+          profile_id: profileData.id,
+          nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
+          status: formData.status || 'Tetap'
+        }])
 
       if (employeeError) {
-        console.error('Error inserting employee:', employeeError)
+        setErrorMessage('Error membuat data karyawan: ' + employeeError.message)
         return
       }
 
-      console.log('Successfully saved employee:', formData)
+      setSuccessMessage('Karyawan berhasil ditambahkan!')
+      setFormData(initialFormData)
       setIsModalOpen(false)
+      await loadKaryawan()
+
+      // Automatically hide success alert after 4 seconds
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 4000)
     } catch (error) {
       console.error('Unexpected error during submit:', error)
+      setErrorMessage('Terjadi kesalahan: ' + (error as Error).message)
     }
   }
 
@@ -366,6 +449,19 @@ export default function KaryawanManagementPage() {
           Kelola data karyawan non-dosen Universitas Batam
         </p>
       </div>
+
+      {successMessage && !isModalOpen && (
+        <Alert className="bg-emerald-50 text-emerald-800 border-emerald-200">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          <AlertTitle>Sukses</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
+      {errorMessage && !isModalOpen && (
+        <Alert variant="destructive">
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -607,6 +703,8 @@ export default function KaryawanManagementPage() {
             setCurrentTab('personal')
             setFormData(initialFormData)
             setCameraActive(false)
+            setErrorMessage(null)
+            setSuccessMessage(null)
           }
         }}
       >
@@ -634,6 +732,19 @@ export default function KaryawanManagementPage() {
               </div>
             </div>
           </DialogHeader>
+
+          {successMessage && isModalOpen && (
+            <Alert className="mb-4 bg-emerald-50 text-emerald-800 border-emerald-200">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <AlertTitle>Sukses</AlertTitle>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          )}
+          {errorMessage && isModalOpen && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
 
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
             <TabsList className="w-full overflow-x-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-8">
@@ -1452,7 +1563,7 @@ export default function KaryawanManagementPage() {
             </div>
 
             {currentTab === FORM_TABS[FORM_TABS.length - 1].id ? (
-              <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-full px-6 py-2">
+              <Button onClick={handleSubmit} className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-full px-6 py-2">
                 Simpan Data
               </Button>
             ) : (
