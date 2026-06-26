@@ -17,11 +17,18 @@ export default function EmployeeLayout({
     setLocalStorageRole(localStorage.getItem("user_role"));
   }, []);
 
+  // Helper to get role name
+  const getRoleName = (): string | undefined => {
+    if (typeof profile?.role === 'string') return profile.role
+    if (profile?.role?.name) return profile.role.name
+    return undefined
+  }
+  const roleName = getRoleName()
   const isEmployee =
     localStorageRole === "employee" ||
     localStorageRole === "karyawan" ||
     localStorageRole === "pegawai" ||
-    (profile?.role?.name && (profile.role.name === "karyawan" || profile.role.name === "pegawai"));
+    (roleName && ["karyawan", "pegawai", "employee"].includes(roleName))
 
   const isVerified = !loading && isEmployee;
 

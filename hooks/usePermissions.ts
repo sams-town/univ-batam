@@ -124,7 +124,7 @@ const rolePermissions: Record<string, string[]> = {
 
 export function usePermissions() {
   const { profile } = useAuth()
-  const roleName = profile?.role?.name || 'mahasiswa'
+  const roleName = (typeof profile?.role === 'string' ? profile.role : profile?.role?.name) || 'mahasiswa'
 
   // Get permissions for the current role
   const permissions = rolePermissions[roleName] || rolePermissions['mahasiswa']

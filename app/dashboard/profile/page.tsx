@@ -61,7 +61,7 @@ export default function ProfilePage() {
       setError('')
       try {
         // Determine user role
-        const roleName = profile.role?.name
+        const roleName = (typeof profile.role === 'string' ? profile.role : (profile.role && 'name' in profile.role ? profile.role.name : undefined))
         
         if (roleName === 'super_admin' || roleName === 'admin_akademik') {
           setRoleType('admin')
@@ -318,7 +318,11 @@ export default function ProfilePage() {
                 <div>
                   <Label className="text-sm text-slate-500">Jabatan/Role</Label>
                   <p className="text-slate-900">
-                    {activeProfile?.role?.name === 'super_admin' ? 'Superadmin / Full Access Control' : 'Admin Akademik'}
+                    {(() => {
+                      const r = activeProfile?.role
+                      const name = typeof r === 'string' ? r : r?.name
+                      return name === 'super_admin' ? 'Superadmin / Full Access Control' : 'Admin Akademik'
+                    })()}
                   </p>
                 </div>
                 <div>

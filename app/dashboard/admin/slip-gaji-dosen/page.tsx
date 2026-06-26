@@ -88,7 +88,9 @@ export default function SlipGajiDosenPage() {
   const [userRole, setUserRole] = useState<string>('')
 
   useEffect(() => {
-    if (profile?.role?.name) {
+    if (typeof profile?.role === 'string') {
+      setUserRole(profile.role)
+    } else if (profile?.role?.name) {
       setUserRole(profile.role.name)
     } else {
       // Fallback check from localStorage role

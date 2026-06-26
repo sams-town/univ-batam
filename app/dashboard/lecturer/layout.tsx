@@ -17,10 +17,18 @@ export default function LecturerLayout({
     setLocalStorageRole(localStorage.getItem("user_role"));
   }, []);
 
+  // Helper to get role name with type narrowing
+  const getRoleName = (): string | undefined => {
+    if (typeof profile?.role === 'string') return profile.role
+    if (profile?.role && 'name' in profile.role) return profile.role.name
+    return undefined
+  }
+  const roleName = getRoleName()
+  
   const isLecturer =
     localStorageRole === "lecturer" ||
     localStorageRole === "dosen" ||
-    (profile?.role?.name && profile.role.name === "dosen");
+    (roleName === "dosen")
 
   const isVerified = !loading && isLecturer;
 

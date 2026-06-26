@@ -407,7 +407,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const { profile } = useAuth()
   const { hasMenuAccess, roleName } = usePermissions()
-  const role = profile?.role?.name || 'mahasiswa'
+  const role = (typeof profile?.role === 'string' ? profile.role : profile?.role?.name) || 'mahasiswa'
 
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.roles.includes(role)) return false
