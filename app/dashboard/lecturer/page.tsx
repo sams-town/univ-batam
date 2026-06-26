@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
+  Camera,
+  X,
   CheckCircle2,
   Clock,
   LogIn,
@@ -58,7 +60,15 @@ const quickMenuItems = [
 export default function LecturerDashboardPage() {
   const { profile, user } = useAuth()
 
-  // Attendance state
+  // Attendance & Camera Modal state
+  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [attendanceType, setAttendanceType] = useState<'in' | 'out' | null>(null)
+  const [cameraActive, setCameraActive] = useState(false)
+  const [cameraLoading, setCameraLoading] = useState(false)
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+
+  // Attendance submission state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [attendanceResult, setAttendanceResult] = useState<{
@@ -67,6 +77,10 @@ export default function LecturerDashboardPage() {
     isLate: boolean
     lateMinutes: number
   } | null>(null)
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   // Live time
   const [currentTime, setCurrentTime] = useState('00:00:00')
@@ -99,8 +113,95 @@ export default function LecturerDashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Handle attendance
-  const handleAttendance = async (type: 'in' | 'out') => {
+  // Auto start/stop camera on modal toggle
+  useEffect(() => {
+    if (showCameraModal) {
+      startCamera()
+    } else {
+      stopCamera()
+    }
+    return () => {
+      stopCamera()
+    }
+  }, [showCameraModal])
+
+  // Stop camera function
+  const stopCamera = () => {
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks()
+      tracks.forEach((t) => t.stop())
+      streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setCameraActive(false)
+  }
+
+  // Start camera function
+  const startCamera = async () => {
+    setCameraLoading(true)
+    setCameraError(null)
+    setCapturedPhoto(null)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          facingMode: 'user'
+        },
+        audio: false
+      })
+
+      streamRef.current = stream
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play()
+        }
+      }
+
+      setCameraActive(true)
+    } catch (err: any) {
+      console.error('Camera error:', err)
+      if (err.name === 'NotAllowedError') {
+        setCameraError('Izin kamera ditolak. Silakan izinkan akses kamera.')
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('Kamera tidak ditemukan di perangkat Anda.')
+      } else {
+        setCameraError('Gagal mengakses kamera. Silakan coba lagi.')
+      }
+    } finally {
+      setCameraLoading(false)
+    }
+  }
+
+  // Capture photo function
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d')
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth
+        canvasRef.current.height = videoRef.current.videoHeight
+        context.drawImage(videoRef.current, 0, 0)
+        const photoUrl = canvasRef.current.toDataURL('image/png')
+        setCapturedPhoto(photoUrl)
+        stopCamera()
+      }
+    }
+  }
+
+  // Handle open camera popup
+  const handleOpenAttendanceCamera = (type: 'in' | 'out') => {
+    setAttendanceType(type)
+    setShowCameraModal(true)
+  }
+
+  // Handle attendance record submission
+  const handleAttendance = async () => {
+    if (!capturedPhoto || !attendanceType) return
     setIsSubmitting(true)
 
     try {
@@ -109,8 +210,8 @@ export default function LecturerDashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
-          type,
-          photoUrl: null,
+          type: attendanceType,
+          photoUrl: capturedPhoto,
           location: null
         })
       })
@@ -119,11 +220,12 @@ export default function LecturerDashboardPage() {
 
       if (data.success) {
         setAttendanceResult({
-          type,
+          type: attendanceType,
           time: data.formattedTime,
           isLate: data.isLate,
           lateMinutes: data.lateMinutes
         })
+        setShowCameraModal(false)
         setShowSuccessModal(true)
       }
     } catch (error) {
@@ -181,28 +283,20 @@ export default function LecturerDashboardPage() {
             <h2 className="text-xl font-bold text-slate-800 mb-6">Absensi Hari Ini</h2>
             <div className="grid grid-cols-2 gap-4">
               <Button
-                onClick={() => handleAttendance('in')}
-                disabled={isSubmitting}
+                onClick={() => handleOpenAttendanceCamera('in')}
                 className="h-24 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
               >
                 <LogIn className="h-8 w-8" />
                 <span>Absen Masuk</span>
               </Button>
               <Button
-                onClick={() => handleAttendance('out')}
-                disabled={isSubmitting}
+                onClick={() => handleOpenAttendanceCamera('out')}
                 className="h-24 text-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-3xl shadow-lg flex flex-col items-center justify-center gap-2"
               >
                 <LogOut className="h-8 w-8" />
                 <span>Absen Keluar</span>
               </Button>
             </div>
-            {isSubmitting && (
-              <div className="text-center mt-4 text-slate-600 flex items-center justify-center gap-2">
-                <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                Memproses absensi...
-              </div>
-            )}
           </div>
 
           {/* Quick Menu */}
@@ -230,6 +324,145 @@ export default function LecturerDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => setShowCameraModal(false)} />
+          <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-2xl rounded-3xl border border-white/50 shadow-2xl overflow-hidden z-10 p-6">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Camera className="h-5 w-5 text-blue-600" />
+                Kamera Absensi - {attendanceType === 'in' ? 'Absen Masuk' : 'Absen Keluar'}
+              </h3>
+              <button
+                onClick={() => setShowCameraModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 hover:text-slate-800 transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Camera Viewfinder */}
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden aspect-video mb-4 shadow-inner">
+              {/* Video Element */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute inset-0 w-full h-full object-cover ${cameraActive && !capturedPhoto ? 'block' : 'hidden'}`}
+              />
+
+              {/* Captured Photo */}
+              {capturedPhoto && (
+                <div className="absolute inset-0">
+                  <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover" />
+                  <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1.5 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Foto Diambil
+                  </div>
+                </div>
+              )}
+
+              {/* Placeholder */}
+              {!cameraActive && !capturedPhoto && !cameraLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-6">
+                  <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-3 border border-white/20">
+                    <Camera className="h-10 w-10 text-white/70" />
+                  </div>
+                  <p className="text-base font-medium text-white/80">Kamera tidak aktif</p>
+                </div>
+              )}
+
+              {/* Loading */}
+              {cameraLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
+                  <div className="h-10 w-10 border-4 border-slate-600 border-t-blue-400 rounded-full animate-spin mb-3" />
+                  <span className="text-sm">Membuka kamera...</span>
+                </div>
+              )}
+
+              {/* Error */}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 p-6 text-center">
+                  <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-3">
+                    <X className="h-8 w-8 text-red-500" />
+                  </div>
+                  <p className="text-red-300 font-semibold text-sm max-w-xs">{cameraError}</p>
+                </div>
+              )}
+
+              {/* Camera Guide Overlay */}
+              {cameraActive && !capturedPhoto && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-48 h-60 border-2 border-dashed border-blue-400/60 rounded-[50%]" />
+                </div>
+              )}
+
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            {/* Camera Controls */}
+            <div className="flex gap-3">
+              {!cameraActive && !capturedPhoto ? (
+                <Button
+                  onClick={startCamera}
+                  disabled={cameraLoading}
+                  className="flex-1 h-12 text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg rounded-xl"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  {cameraLoading ? 'Membuka...' : 'Buka Kamera'}
+                </Button>
+              ) : cameraActive && !capturedPhoto ? (
+                <>
+                  <Button
+                    onClick={capturePhoto}
+                    className="flex-1 h-12 text-sm font-semibold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg rounded-xl"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Ambil Foto
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowCameraModal(false)}
+                    className="h-12 text-sm font-semibold rounded-xl border border-slate-200"
+                  >
+                    Batal
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleAttendance}
+                    disabled={isSubmitting}
+                    className="flex-1 h-12 text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg rounded-xl"
+                  >
+                    {isSubmitting ? (
+                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                    )}
+                    Kirim Absensi
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setCapturedPhoto(null)
+                      startCamera()
+                    }}
+                    className="h-12 text-sm font-semibold rounded-xl border border-slate-200"
+                  >
+                    Ulangi Foto
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {showSuccessModal && attendanceResult && (

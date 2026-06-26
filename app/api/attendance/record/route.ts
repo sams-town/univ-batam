@@ -9,11 +9,9 @@ export async function POST(request: NextRequest) {
     const { data: timeData, error: timeError } = await supabase
       .rpc('get_current_timestamp')
     
-    // If that fails, use server time (UTC+7 for WIB)
     let timestamp: Date
-    if (timeError) {
+    if (timeError || !timeData) {
       timestamp = new Date()
-      timestamp.setHours(timestamp.getHours() + 7)
     } else {
       timestamp = new Date(timeData)
     }

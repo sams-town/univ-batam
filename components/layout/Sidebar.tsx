@@ -576,6 +576,12 @@ export default function Sidebar() {
             <p className="text-[10px] text-slate-500 font-medium">Sistem Informasi Manajemen</p>
           </div>
         </div>
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Mobile Sidebar Drawer Overlay */}
