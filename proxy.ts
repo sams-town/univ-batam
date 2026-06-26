@@ -9,7 +9,6 @@ export async function proxy(request: NextRequest) {
     },
   })
 
-  // Initialize Supabase Client inside Proxy
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,94 +18,32 @@ export async function proxy(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({ request: { headers: request.headers } })
+          response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          request.cookies.set({ name, value: '', ...options })
+          response = NextResponse.next({ request: { headers: request.headers } })
+          response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
-  // Retrieve authenticated user info safely
   const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
 
-  // Redirect to login if user is unauthenticated and attempting to visit dashboard
+  // Only redirect unauthenticated users away from dashboard.
+  // Role-based access control is handled by each dashboard layout (admin/layout.tsx, etc.)
+  // This avoids the mismatch between localStorage-session (client) and cookie-session (server).
   if (!user && pathname.startsWith('/dashboard')) {
-    const url = new URL('/login', request.url)
-    return NextResponse.redirect(url)
-  }
-
-  // If user is authenticated and visiting dashboard, check role from profiles table
-  if (user && pathname.startsWith('/dashboard')) {
-    // Query role directly from profiles table (more reliable than JWT metadata)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, role_id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    // Resolve role: profile.role is a VARCHAR string from migration 007
-    // Fall back to JWT metadata as secondary source, then default to 'mahasiswa'
-    const role = (typeof profile?.role === 'string' ? profile.role : null)
-      || user.user_metadata?.role
-      || user.app_metadata?.role
-      || 'mahasiswa'
-
-    // Admin check: only admin/superadmin roles allowed in /dashboard/admin
-    if (pathname.startsWith('/dashboard/admin') && !['super_admin', 'admin', 'admin_akademik'].includes(role)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
-    // Lecturer check: only dosen role allowed in /dashboard/lecturer
-    if (pathname.startsWith('/dashboard/lecturer') && role !== 'dosen') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
-    // Student check: only mahasiswa role allowed in /dashboard/student
-    if (pathname.startsWith('/dashboard/student') && role !== 'mahasiswa') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
-    // Employee check: only employees allowed in /dashboard/employee
-    if (pathname.startsWith('/dashboard/employee') && !['employee', 'karyawan', 'pegawai'].includes(role)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return response
 }
 
 export const config = {
-  // Protect all dashboard paths and handle session refresh
   matcher: ['/dashboard/:path*', '/login'],
 }
