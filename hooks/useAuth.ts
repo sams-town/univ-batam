@@ -60,7 +60,7 @@ export function useAuth() {
     const fetchAndHealProfile = async (userId: string, email: string) => {
       let { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*, role')
+        .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, address_ktp, address_domicile, gender, place_of_birth, date_of_birth')
         .eq('id', userId)
         .maybeSingle();
 
@@ -93,7 +93,7 @@ export function useAuth() {
 
           const { data: updatedProfile } = await supabase
             .from('profiles')
-            .select('*, role')
+            .select('id, first_name, last_name, email, role, role_id, avatar_url, phone, address_ktp, address_domicile, gender, place_of_birth, date_of_birth')
             .eq('id', userId)
             .maybeSingle();
 
