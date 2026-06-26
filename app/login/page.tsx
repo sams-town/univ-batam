@@ -249,10 +249,10 @@ export default function LoginPage() {
 
       // Get user's profile and role
       let { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*, role:roles(name)')
-        .eq('id', session.user.id)
-        .maybeSingle()
+  .from('profiles')
+  .select('*, role')
+  .eq('id', session.user.id)
+  .maybeSingle()
 
       // Auto-heal admin profile/role if missing
       const isAdminEmailOrId = session.user.id === 'b6b9d09e-2094-4459-884e-7b0a0caad7b3' || email.toLowerCase().includes('admin')
