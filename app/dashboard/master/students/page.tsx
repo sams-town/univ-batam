@@ -266,33 +266,30 @@ export default function StudentsPage() {
       }
 
       // 3. Create other records (student_academics, student_parents, etc.)
-      // Note: Make sure these tables exist in your database first!
-      // For now, we'll log them, but you can uncomment once tables are created
-      /*
       await supabase.from('student_academics').insert([{
         student_id: studentData.id,
-        faculty_id: formData.faculty_id,
-        study_program_id: formData.study_program_id,
+        faculty_id: formData.faculty_id || null,
+        study_program_id: formData.study_program_id || null,
         admission_year: formData.admission_year,
         entry_semester: formData.entry_semester,
         admission_path: formData.admission_path,
         student_status: formData.student_status,
-        academic_advisor_id: formData.academic_advisor_id,
-        current_semester: formData.current_semester
+        academic_advisor_id: formData.academic_advisor_id || null,
+        current_semester: parseInt(formData.current_semester) || 1
       }])
 
       await supabase.from('student_parents').insert([{
         student_id: studentData.id,
         father_name: formData.father_name,
         father_nik: formData.father_nik,
-        father_birth_date: formData.father_birth_date,
+        father_birth_date: formData.father_birth_date || null,
         father_education: formData.father_education,
         father_job: formData.father_job,
         father_income: formData.father_income,
         father_phone: formData.father_phone,
         mother_name: formData.mother_name,
         mother_nik: formData.mother_nik,
-        mother_birth_date: formData.mother_birth_date,
+        mother_birth_date: formData.mother_birth_date || null,
         mother_education: formData.mother_education,
         mother_job: formData.mother_job,
         mother_income: formData.mother_income,
@@ -320,7 +317,6 @@ export default function StudentsPage() {
         is_scholarship: formData.is_scholarship,
         scholarship_name: formData.scholarship_name
       }])
-      */
 
       await loadData()
       resetForm()
