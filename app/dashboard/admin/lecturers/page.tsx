@@ -39,6 +39,7 @@ export default function AdminLecturersPage() {
     first_name: '',
     last_name: '',
     email: '',
+    password: '',
     phone: '',
     department_id: '',
   })
@@ -65,60 +66,40 @@ export default function AdminLecturersPage() {
 
   const handleSubmit = async () => {
     try {
-      const { data: roleData, error: roleError } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'dosen')
-        .maybeSingle()
-      
-      if (roleError) throw roleError
-
-      if (!roleData) {
-        alert('Role dosen tidak ditemukan!')
+      if (!formData.first_name || !formData.email || !formData.password) {
+        alert('Nama Depan, Email, dan Password wajib diisi!')
         return
       }
 
-      // First create profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            email: formData.email,
-            phone: formData.phone,
-            role_id: roleData.id
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.first_name,
+          lastName: formData.last_name,
+          phone: formData.phone,
+          roleName: 'dosen',
+          details: {
+            nip: formData.nip || Math.floor(Math.random() * 100000000).toString(),
+            department_id: formData.department_id || null
           }
-        ])
-        .select('id')
-        .single()
+        })
+      })
 
-      if (profileError) {
-        console.error('Profile error:', profileError)
-        alert('Gagal membuat profil: ' + profileError.message)
-        return
-      }
+      const data = await response.json()
 
-      // Then create lecturer
-      const { error: lecturerError } = await supabase
-        .from('lecturers')
-        .insert([
-          {
-            nip: formData.nip,
-            profile_id: profileData.id,
-            department_id: formData.department_id
-          }
-        ])
-      
-      if (lecturerError) {
-        console.error('Lecturer error:', lecturerError)
-        alert('Gagal membuat data dosen: ' + lecturerError.message)
+      if (!response.ok) {
+        alert(data.error || 'Gagal membuat akun dosen')
         return
       }
 
       alert('Dosen berhasil ditambahkan!')
       setIsModalOpen(false)
-      setFormData({ nip: '', first_name: '', last_name: '', email: '', phone: '', department_id: '' })
+      setFormData({ nip: '', first_name: '', last_name: '', email: '', password: '', phone: '', department_id: '' })
       loadLecturers()
     } catch (err) {
       console.error('Error adding lecturer:', err)
@@ -249,6 +230,15 @@ export default function AdminLecturersPage() {
                 placeholder="email@universitas.ac.id"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Label>Password</Label>
+              <Input 
+                type="password"
+                placeholder="Password minimal 6 karakter"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-1 gap-2">

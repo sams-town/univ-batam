@@ -255,35 +255,8 @@ export default function KaryawanManagementPage() {
       setErrorMessage(null)
       setSuccessMessage(null)
 
-      // Get role_id for karyawan (pegawai)
-      let { data: roleData, error: roleError } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'pegawai')
-        .maybeSingle()
-
-      if (roleError) {
-        setErrorMessage('Error mendapatkan role: ' + roleError.message)
-        return
-      }
-
-      // Fallback: check 'karyawan' if 'pegawai' is not found
-      if (!roleData) {
-        const { data: fallbackRole, error: fallbackError } = await supabase
-          .from('roles')
-          .select('id')
-          .eq('name', 'karyawan')
-          .maybeSingle()
-
-        if (fallbackError) {
-          setErrorMessage('Error mendapatkan role: ' + fallbackError.message)
-          return
-        }
-        roleData = fallbackRole
-      }
-
-      if (!roleData) {
-        setErrorMessage('Role karyawan/pegawai tidak ditemukan di database!')
+      if (!formData.nama || !formData.email || !formData.password) {
+        setErrorMessage('Nama Lengkap, Email, dan Password wajib diisi!')
         return
       }
 
@@ -291,40 +264,34 @@ export default function KaryawanManagementPage() {
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
 
-      // Insert profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          first_name: firstName,
-          last_name: lastName,
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           email: formData.email,
+          password: formData.password,
+          firstName,
+          lastName,
           phone: formData.hp,
-          gender: formData.jenisKelamin === 'Laki-laki' ? 'laki-laki' : (formData.jenisKelamin === 'Perempuan' ? 'perempuan' : ''),
-          place_of_birth: formData.lokasi,
-          date_of_birth: formData.tglLahir || null,
-          address_ktp: formData.alamat,
-          address_domicile: formData.alamatDomisili,
-          role_id: roleData.id
-        }])
-        .select('id')
-        .single()
+          gender: formData.jenisKelamin,
+          placeOfBirth: formData.lokasi,
+          dateOfBirth: formData.tglLahir || null,
+          addressKtp: formData.alamat,
+          addressDomicile: formData.alamatDomisili || formData.alamatDomisile,
+          roleName: 'pegawai',
+          details: {
+            nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
+            status: formData.status || 'Tetap'
+          }
+        })
+      })
 
-      if (profileError) {
-        setErrorMessage('Error membuat profil: ' + profileError.message)
-        return
-      }
+      const data = await response.json()
 
-      // Insert employee
-      const { error: employeeError } = await supabase
-        .from('employees')
-        .insert([{
-          profile_id: profileData.id,
-          nip: formData.nip || formData.username || Math.floor(Math.random() * 100000000).toString(),
-          status: formData.status || 'Tetap'
-        }])
-
-      if (employeeError) {
-        setErrorMessage('Error membuat data karyawan: ' + employeeError.message)
+      if (!response.ok) {
+        setErrorMessage(data.error || 'Gagal membuat akun pegawai')
         return
       }
 
