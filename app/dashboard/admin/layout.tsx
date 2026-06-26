@@ -21,8 +21,14 @@ export default function AdminLayout({
   const isAdmin =
     localStorageRole === "admin" ||
     localStorageRole === "superadmin" ||
-    (profile?.role?.name &&
-      (profile.role.name === "super_admin" || profile.role.name === "admin_akademik"));
+    localStorageRole === "super_admin" ||
+    localStorageRole === "admin_akademik" ||
+    // profile.role is a VARCHAR string (from migration 007)
+    (typeof profile?.role === 'string' &&
+      (profile.role === "super_admin" || profile.role === "admin_akademik")) ||
+    // fallback: if role is still a joined object (legacy)
+    (profile?.role && typeof profile.role === 'object' &&
+      ((profile.role as any)?.name === "super_admin" || (profile.role as any)?.name === "admin_akademik"));
 
   const isVerified = !loading && isAdmin;
 

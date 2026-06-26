@@ -11,8 +11,10 @@ export interface Profile {
   gender?: "laki-laki" | "perempuan" | ""
   place_of_birth?: string
   date_of_birth?: string
-  role?: {
-    id: string
+  // role can be a plain string (from migration 007 role VARCHAR column)
+  // or a joined object { id, name } from older select('*, role:roles(*)')
+  role?: string | {
+    id?: string
     name: string
   }
 }

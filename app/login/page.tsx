@@ -288,7 +288,7 @@ export default function LoginPage() {
           // Fetch updated profile
           const { data: updatedProfile } = await supabase
             .from('profiles')
-            .select('*, role:roles(name)')
+            .select('*, role')
             .eq('id', session.user.id)
             .maybeSingle()
 
@@ -323,7 +323,8 @@ export default function LoginPage() {
       }
 
       // Redirect based on role
-      const role = profile?.role?.name || 'mahasiswa'
+      // profile.role is a VARCHAR string (from migration 007), not a joined object
+      const role = (typeof profile?.role === 'string' ? profile.role : (profile?.role as any)?.name) || 'mahasiswa'
       
       // Simpan role di localStorage untuk navigasi sidebar dan routing aman
       localStorage.setItem('user_role', role)
