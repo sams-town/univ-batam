@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Sidebar from "@/components/layout/Sidebar";
 
 export default function EmployeeLayout({
   children,
@@ -20,7 +21,7 @@ export default function EmployeeLayout({
   // Helper to get role name
   const getRoleName = (): string | undefined => {
     if (typeof profile?.role === 'string') return profile.role
-    if (profile?.role?.name) return profile.role.name
+    if (profile?.role && 'name' in profile.role) return profile.role.name
     return undefined
   }
   const roleName = getRoleName()
@@ -50,8 +51,11 @@ export default function EmployeeLayout({
   }
 
   return (
-    <main className="bg-slate-50 min-h-screen">
-      {children}
-    </main>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 bg-slate-50 min-h-screen">
+        {children}
+      </main>
+    </div>
   );
 }

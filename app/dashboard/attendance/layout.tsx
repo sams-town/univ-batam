@@ -31,9 +31,12 @@ export default function AttendanceLayout({
   const isMobileRole = userRole && ['mahasiswa', 'dosen', 'employee', 'karyawan'].includes(userRole)
 
   return (
-    <main className="bg-slate-50 min-h-screen pb-24">
-      {children}
-      {isMobileRole && <DashboardBottomNav role={userRole as any} />}
-    </main>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 bg-slate-50 min-h-screen pb-24">
+        {children}
+        {isMobileRole && <DashboardBottomNav role={userRole as any} />}
+      </main>
+    </div>
   )
 }

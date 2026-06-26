@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav'
+import Sidebar from '@/components/layout/Sidebar'
 
 export default function ProfileLayout({
   children
@@ -30,9 +31,12 @@ export default function ProfileLayout({
   const isMobileRole = userRole && ['mahasiswa', 'dosen', 'employee', 'karyawan'].includes(userRole)
 
   return (
-    <main className="bg-slate-50 min-h-screen pb-24">
-      {children}
-      {isMobileRole && <DashboardBottomNav role={userRole as any} />}
-    </main>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 bg-slate-50 min-h-screen pb-24">
+        {children}
+        {isMobileRole && <DashboardBottomNav role={userRole as any} />}
+      </main>
+    </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Sidebar from "@/components/layout/Sidebar";
 
 export default function StudentLayout({
   children,
@@ -50,8 +51,11 @@ export default function StudentLayout({
   }
 
   return (
-    <main className="bg-slate-50 min-h-screen">
-      {children}
-    </main>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 bg-slate-50 min-h-screen">
+        {children}
+      </main>
+    </div>
   );
 }

@@ -22,8 +22,11 @@ export default function PaymentsLayout({
   }
 
   return (
-    <main className="bg-slate-50 min-h-screen">
-      {children}
-    </main>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 bg-slate-50 min-h-screen">
+        {children}
+      </main>
+    </div>
   )
 }
